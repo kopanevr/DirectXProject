@@ -1,0 +1,321 @@
+/**
+ * @file d3d.cpp
+ * @brief
+ */
+
+#include "d3d.h"
+
+#include <Windows.h>
+#include <D3DCompiler.h>
+
+#include <cassert>
+
+using namespace ND3D;
+
+/**
+ * @brief
+ */
+BOOL D3D::CreateDeviceAndSwapChain(HWND hWnd)
+{
+    assert(hWnd != nullptr);
+
+    if (hWnd == nullptr) { return FALSE; }
+
+    DXGI_SWAP_CHAIN_DESC sd = {};
+
+    sd.BufferCount                          = (UINT)2U;                                     // Количество буферов.
+
+    sd.BufferDesc.Width                     = (UINT)0U;                                     // Ширина.
+    sd.BufferDesc.Height                    = (UINT)0U;                                     // Высота.
+    sd.BufferDesc.Format                    = DXGI_FORMAT_R8G8B8A8_UNORM;                   // Формат пикселей.
+    sd.BufferDesc.RefreshRate.Numerator     = (UINT)60U;                                    // Чеслитель.
+    sd.BufferDesc.RefreshRate.Denominator   = (UINT)1U;                                     // Знаменатель.
+
+    sd.BufferUsage                          = DXGI_USAGE_RENDER_TARGET_OUTPUT; 
+    sd.OutputWindow                         = hWnd;                                         // HANDLE окна.
+
+    sd.SampleDesc.Count                     = (UINT)1U;                                     // Количество сэмплов на пиксель.
+    sd.SampleDesc.Quality                   = (UINT)0U;                                     // Уровень качества сглаживания.
+
+    sd.Windowed                             = TRUE;
+
+    IDXGIAdapter* pAdapter = GetAdapter(1U);
+
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(
+        pAdapter,                                                                           // Графический адаптер.
+        D3D_DRIVER_TYPE_HARDWARE,                                                           // Тип драйвера.
+        nullptr,                                                                            // Программный драйвер.
+        (UINT)0U,                                                                           // Флаги.
+        nullptr,
+        (UINT)0U,
+        D3D11_SDK_VERSION,                                                                  // Версия SDK.
+        &sd,
+        &d3DContext.pSwapChain,
+        &d3DContext.pD3DDevice,
+        nullptr,
+        &d3DContext.pD3DDeviceContext
+    );
+
+    pAdapter->Release();
+    pAdapter = nullptr;
+
+    assert(d3DContext.pSwapChain != nullptr);
+    assert(d3DContext.pD3DDevice != nullptr);
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief
+ */
+void D3D::DestroyDeviceAndSwapChain()
+{
+    if (d3DContext.pD3DDevice != nullptr)
+    {
+        d3DContext.pD3DDevice->Release();
+
+        d3DContext.pD3DDevice = nullptr;
+    }
+
+    if (d3DContext.pSwapChain != nullptr)
+    {
+        d3DContext.pSwapChain->Release();
+
+        d3DContext.pSwapChain = nullptr;
+    }
+
+    if (d3DContext.pD3DDeviceContext != nullptr)
+    {
+        d3DContext.pD3DDeviceContext->Release();
+
+        d3DContext.pD3DDeviceContext = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+BOOL D3D::CreateTargetView()
+{
+    ID3D11Texture2D* pBackBuffer = nullptr;
+
+    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+
+    HRESULT hr = d3DContext.pSwapChain->GetBuffer((UINT)0U, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
+
+    if (FAILED(hr) == TRUE) { return FALSE; }
+
+    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)&pBackBuffer, nullptr, &d3DContext.pRenderTargetView);
+
+    pBackBuffer->Release();
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief Получить графический адаптер.
+ */
+IDXGIAdapter* D3D::GetAdapter(const UINT i) const
+{
+    IDXGIFactory* pFactory = nullptr;
+
+    HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);          // Создание фабрики DXGI.
+
+    assert(SUCCEEDED(hr) == TRUE);
+
+    if (FAILED(hr)) { return nullptr; }
+
+    IDXGIAdapter* pAdapter = nullptr;
+
+    if (FAILED(pFactory->EnumAdapters(i, &pAdapter))) { return nullptr; }               // Получение графического адаптера.
+
+    pFactory->Release();
+    pFactory = nullptr;
+
+    return pAdapter;
+}
+
+/**
+ * @brief
+ */
+void D3D::DestroyTargetView()
+{
+    if (d3DContext.pRenderTargetView != nullptr)
+    {
+        d3DContext.pRenderTargetView->Release();
+
+        d3DContext.pRenderTargetView = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+BOOL D3D::SetViewport(HWND hWnd) const
+{
+    assert(hWnd != nullptr);
+
+    if (hWnd == nullptr) { return FALSE; }
+
+    RECT rect = {};
+
+    if (GetWindowRect(hWnd, &rect) != TRUE) { return FALSE; };
+
+    D3D11_VIEWPORT viewport = {};
+
+    LONG width = rect.right - rect.left;
+    LONG height = rect.bottom - rect.top;
+
+    viewport.TopLeftX   = (FLOAT)0.0f;
+    viewport.TopLeftY   = (FLOAT)0.0f;
+    viewport.Width      = (FLOAT)width;
+    viewport.Height     = (FLOAT)height;
+    viewport.MinDepth   = (FLOAT)0.0f;
+    viewport.MaxDepth   = (FLOAT)1.0f;
+
+    if (d3DContext.pD3DDeviceContext == nullptr) { return FALSE; }
+
+    d3DContext.pD3DDeviceContext->RSSetViewports((UINT)1U, &viewport);
+
+    return TRUE;
+}
+
+/**
+ * @brief Скомпилировать шейдер из файла.
+ */
+BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR pTarget, ID3DBlob** ppCode)
+{
+    ID3DBlob* pErrorMsgs = nullptr;
+
+    HRESULT hr = D3DCompileFromFile(
+        pFileName,
+        nullptr,
+        nullptr,
+        pEntryppoint,
+        pTarget,                                                                        // Профиль шейдера.
+        D3DCOMPILE_DEBUG,
+        (UINT)0U,
+        ppCode,                                                                         // Код шейдера.
+        &pErrorMsgs                                                                     // Сообщение об ошибке или предупрежеднии.
+    );
+
+    //
+
+    pErrorMsgs->Release();
+
+    assert(SUCCEEDED(hr) == TRUE);
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief
+ */
+BOOL D3D::SetInputLayout(ID3DBlob* pCode)
+{
+    D3D11_INPUT_ELEMENT_DESC ied[] = {
+        {
+            (LPCSTR)"POSITION",
+            (UINT)0U,                                                                   // Индекс семантики.
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            (UINT)0U,                                                                   // Индекс слота.
+            (UINT)0U,                                                                   // Смещение в байтах.
+            D3D11_INPUT_PER_VERTEX_DATA,
+            (UINT)0U
+        },
+        {
+            (LPCSTR)"",
+            (UINT)0U,                                                                   // Индекс семантики.
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            (UINT)0U,                                                                   // Индекс слота.
+            (UINT)12U,                                                                  // Смещение в байтах.
+            D3D11_INPUT_PER_VERTEX_DATA,
+            (UINT)0U
+        }
+    };
+
+    UINT numElements = (UINT)ARRAYSIZE(ied);
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateInputLayout(ied, numElements, (const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), &d3DContext.pInputLayout);
+
+    assert(SUCCEEDED(hr) == TRUE);
+
+    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
+
+    d3DContext.pD3DDeviceContext->IASetInputLayout(d3DContext.pInputLayout);
+
+    return TRUE;
+}
+
+/**
+ * @brief Создать вершинный шейдер.
+ */
+BOOL D3D::CreateVertexShader()
+{
+    ID3DBlob* pCode = nullptr;                                                         // Код вершинного шейдера.
+
+    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"Main0", "vs_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
+
+    if (d3DContext.pVertexShader == nullptr) { pCode->Release(); return FALSE; }
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
+
+    if (SUCCEEDED(hr) != TRUE) { pCode->Release(); return FALSE; }
+
+    if (SetInputLayout(pCode) != TRUE) { pCode->Release(); return FALSE;}
+
+    pCode->Release();
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief Создать фрагментный шейдер.
+ */
+BOOL D3D::CreatePixelShader()
+{
+    ID3DBlob* pCode = nullptr;                                                         // Код фрагментного шейдера.
+
+    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"Main1", "ps_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
+
+    if (d3DContext.pPixelShader == nullptr) { pCode->Release(); return FALSE; }
+
+    HRESULT hr = d3DContext.pD3DDevice->CreatePixelShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader);
+
+    pCode->Release();
+
+    return SUCCEEDED(hr);
+}
+
+//
+
+/**
+ * @brief
+ */
+BOOL D3D::Init(HWND hWnd)
+{
+    if (CreateDeviceAndSwapChain(hWnd) != TRUE) { DeInit(); return FALSE; }
+
+    if (CreateTargetView() != TRUE) { DeInit(); return FALSE; }
+
+    if (SetViewport(hWnd) != TRUE) { DeInit(); return FALSE; }
+
+    //
+
+    if (CreateVertexShader() != TRUE) { DeInit(); return FALSE; }
+    if (CreatePixelShader() != TRUE) { DeInit(); return FALSE; }
+
+    //
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ */
+VOID D3D::DeInit()
+{
+    DestroyTargetView();
+
+    DestroyDeviceAndSwapChain();
+}
