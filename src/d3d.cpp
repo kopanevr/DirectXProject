@@ -181,6 +181,44 @@ BOOL D3D::SetViewport(HWND hWnd) const
 }
 
 /**
+ * @brief Создать фрагментный шейдер.
+ */
+BOOL D3D::SetVertexBuffer()
+{
+    D3D11_BUFFER_DESC bd = {};
+
+    bd.ByteWidth                = (UINT)(3U * sizeof(Vertex));                                  // Размер.
+    bd.Usage                    = D3D11_USAGE_DEFAULT;
+    bd.BindFlags                = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags           = (UINT)0U;
+    bd.MiscFlags                = (UINT)0U;
+    bd.StructureByteStride      = (UINT)0U;
+
+    D3D11_SUBRESOURCE_DATA sd = {};
+
+    sd.pSysMem              = (const void*)vertices;                                            // Данные.
+    sd.SysMemPitch          = (UINT)0U;                                                         // Шаг.
+    sd.SysMemSlicePitch     = (UINT)0U;                                                         // Шаг.
+
+    //
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateBuffer(&bd, &sd, &d3DContext.pBuffer);
+
+    assert(SUCCEEDED(hr) == TRUE);
+
+    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
+
+    if (d3DContext.pD3DDeviceContext == nullptr) { return FALSE; }
+
+    UINT stride = (UINT)sizeof(Vertex);                                                         // Шаг.
+    UINT offset = (UINT)0U;                                                                     // Смещение.
+
+    d3DContext.pD3DDeviceContext->IASetVertexBuffers((UINT)0U, (UINT)1U, &d3DContext.pBuffer, &stride, &offset);
+
+    return TRUE;
+}
+
+/**
  * @brief Скомпилировать шейдер из файла.
  */
 BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR pTarget, ID3DBlob** ppCode)
@@ -224,7 +262,7 @@ BOOL D3D::SetInputLayout(ID3DBlob* pCode)
             (UINT)0U
         },
         {
-            (LPCSTR)"",
+            (LPCSTR)"TEXCOORD",
             (UINT)0U,                                                                   // Индекс семантики.
             DXGI_FORMAT_R8G8B8A8_UNORM,
             (UINT)0U,                                                                   // Индекс слота.
@@ -263,6 +301,8 @@ BOOL D3D::CreateVertexShader()
     if (SUCCEEDED(hr) != TRUE) { pCode->Release(); return FALSE; }
 
     if (SetInputLayout(pCode) != TRUE) { pCode->Release(); return FALSE;}
+
+    if (SetVertexBuffer() != TRUE) { DeInit(); return FALSE; }
 
     pCode->Release();
 

@@ -10,12 +10,32 @@
 
 namespace ND3D
 {
+struct Vertex
+{
+    FLOAT x = (FLOAT)0.0f;
+    FLOAT y = (FLOAT)0.0f;
+    FLOAT z = (FLOAT)0.0f;
+
+    FLOAT u = (FLOAT)0.0f;                                          // Текстурные координата.
+    FLOAT v = (FLOAT)0.0f;                                          // Текстурные координата.
+};
+
+/**
+ * @brief Вершины.
+ */
+Vertex vertices[] = {
+    { 0.0f,  0.5f,  0.0f,    0.5f,  0.0f },
+    { 0.5f, -0.5f,  0.0f,    1.0f,  1.0f },
+    {-0.5f, -0.5f,  0.0f,    0.0f,  1.0f }
+};
+
 struct D3DContext final
 {
     ID3D11Device*           pD3DDevice              = nullptr;
     IDXGISwapChain*         pSwapChain              = nullptr;
     ID3D11DeviceContext*    pD3DDeviceContext       = nullptr;
     ID3D11RenderTargetView* pRenderTargetView       = nullptr;
+    ID3D11Buffer*           pBuffer                 = nullptr;      // Вершинный буфер.
     ID3D11VertexShader*     pVertexShader           = nullptr;      // Вершинный шейдер.
     ID3D11PixelShader*      pPixelShader            = nullptr;      // Фрагментный шейдер.
     ID3D11InputLayout*      pInputLayout            = nullptr;
@@ -48,6 +68,10 @@ private:
 
     //
 
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL SetVertexBuffer();
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
