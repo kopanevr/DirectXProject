@@ -39,6 +39,7 @@ struct D3DContext final
     ID3D11VertexShader*     pVertexShader           = nullptr;      // Вершинный шейдер.
     ID3D11PixelShader*      pPixelShader            = nullptr;      // Фрагментный шейдер.
     ID3D11InputLayout*      pInputLayout            = nullptr;
+    ID3D11SamplerState*     pSamplerState           = nullptr;
 };
 
 class D3D final
@@ -71,12 +72,12 @@ private:
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetVertexBuffer();
+    BOOL CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR pTarget, ID3DBlob** ppCode);
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR pTarget, ID3DBlob** ppCode);
-    #if __cplusplus > 201703L
+    BOOL SetVertexBuffer();
+#if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL SetInputLayout(ID3DBlob* pCode);
@@ -88,6 +89,10 @@ private:
     [[nodiscard]]
 #endif
     BOOL CreatePixelShader();
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL SetSamplerState();
 
     //
 private:
