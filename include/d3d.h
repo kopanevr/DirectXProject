@@ -1,4 +1,4 @@
-/**
+ /**
  * @file d3d.h
  * @brief
  */
@@ -16,12 +16,12 @@ struct Vertex
     FLOAT y = (FLOAT)0.0f;
     FLOAT z = (FLOAT)0.0f;
 
-    FLOAT u = (FLOAT)0.0f;                                          // Текстурные координата.
-    FLOAT v = (FLOAT)0.0f;                                          // Текстурные координата.
+    FLOAT u = (FLOAT)0.0f;						// Текстурные координата.
+    FLOAT v = (FLOAT)0.0f;						// Текстурные координата.
 };
 
 /**
- * @brief Вершины.
+ * @brief Вершины фигуры.
  */
 Vertex vertices[] = {
     { 0.0f,  0.5f,  0.0f,    0.5f,  0.0f },
@@ -31,15 +31,17 @@ Vertex vertices[] = {
 
 struct D3DContext final
 {
-    ID3D11Device*           pD3DDevice              = nullptr;
-    IDXGISwapChain*         pSwapChain              = nullptr;
-    ID3D11DeviceContext*    pD3DDeviceContext       = nullptr;
-    ID3D11RenderTargetView* pRenderTargetView       = nullptr;
-    ID3D11Buffer*           pBuffer                 = nullptr;      // Вершинный буфер.
-    ID3D11VertexShader*     pVertexShader           = nullptr;      // Вершинный шейдер.
-    ID3D11PixelShader*      pPixelShader            = nullptr;      // Фрагментный шейдер.
-    ID3D11InputLayout*      pInputLayout            = nullptr;
-    ID3D11SamplerState*     pSamplerState           = nullptr;
+    ID3D11Device*               pD3DDevice              = nullptr;
+    IDXGISwapChain*             pSwapChain              = nullptr;
+    ID3D11DeviceContext*        pD3DDeviceContext       = nullptr;
+    ID3D11RenderTargetView*     pRenderTargetView       = nullptr;
+    ID3D11Buffer*               pBuffer                 = nullptr;      // Вершинный буфер.
+    ID3D11VertexShader*         pVertexShader           = nullptr;      // Вершинный шейдер.
+    ID3D11PixelShader*          pPixelShader            = nullptr;      // Фрагментный шейдер.
+    ID3D11InputLayout*          pInputLayout            = nullptr;
+    ID3D11SamplerState*         pSamplerState           = nullptr;
+    ID3D11Texture2D*            pTexture2D              = nullptr;      // Текстура.
+    ID3D11ShaderResourceView*   pShaderResourceView     = nullptr;      // Ресурс.
 };
 
 class D3D final
@@ -51,8 +53,8 @@ private:
     BOOL CreateDeviceAndSwapChain(HWND hWnd);
     void DestroyDeviceAndSwapChain();
 
-    D3D(const D3D&)                                 = delete;
-    D3D& operator=(const D3D&)                      = delete;
+    D3D(const D3D&)                                     = delete;
+    D3D& operator=(const D3D&)                          = delete;
 
 #if __cplusplus > 201703L
     [[nodiscard]]
@@ -60,12 +62,12 @@ private:
     BOOL CreateTargetView();
     void DestroyTargetView();
 
-    IDXGIAdapter* GetAdapter(const UINT i)          const;
+    IDXGIAdapter* GetAdapter(const UINT i)              const;
 
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetViewport(HWND hWnd)                     const;
+    BOOL SetViewport(HWND hWnd)                         const;
 
     //
 
@@ -80,26 +82,36 @@ private:
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
+    BOOL CreateVertexShader();
+    void DestroyVertexShader();
     BOOL SetInputLayout(ID3DBlob* pCode);
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL CreateVertexShader();
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL CreatePixelShader();
+    void DestroyPixelShader();
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL SetSamplerState();
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL LoadTextureFromFile(LPCWSTR pSrcFile);
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL SetShaderResource();
 
     //
 private:
-    D3DContext d3DContext                           = {};
+    D3DContext d3DContext                               = {};
 public:
-    D3D()                                           = default;
-    ~D3D()                                          = default;
+    D3D()                                               = default;
+    ~D3D()                                              = default;
 
 #if __cplusplus > 201703L
     [[nodiscard]]

@@ -7,10 +7,13 @@
 
 #include <Windows.h>
 #include <D3DCompiler.h>
+#include <DirectXTex.h>
 
 #include <cassert>
 
 using namespace ND3D;
+
+#define CGE
 
 /**
  * @brief
@@ -163,8 +166,8 @@ BOOL D3D::SetViewport(HWND hWnd) const
 
     D3D11_VIEWPORT viewport = {};
 
-    LONG width = rect.right - rect.left;
-    LONG height = rect.bottom - rect.top;
+    LONG width          = rect.right - rect.left;
+    LONG height         = rect.bottom - rect.top;
 
     viewport.TopLeftX   = (FLOAT)0.0f;
     viewport.TopLeftY   = (FLOAT)0.0f;
@@ -247,6 +250,55 @@ BOOL D3D::SetVertexBuffer()
 }
 
 /**
+ * @brief Создать вершинный шейдер.
+ */
+BOOL D3D::CreateVertexShader()
+{
+    ID3DBlob* pCode = nullptr;								// Код вершинного шейдера.
+
+    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
+
+    if (SUCCEEDED(hr) != TRUE) { pCode->Release(); return FALSE; }
+
+    if (SetInputLayout(pCode) != TRUE) { pCode->Release(); return FALSE;}
+
+    if (SetVertexBuffer() != TRUE) { DeInit(); return FALSE; }
+
+    pCode->Release();
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief Создать вершинный шейдер.
+ */
+void D3D::DestroyVertexShader()
+{
+    if (d3DContext.pVertexShader != nullptr)
+    {
+        d3DContext.pVertexShader->Release();
+
+        d3DContext.pVertexShader = nullptr;
+    }
+
+    if (d3DContext.pInputLayout != nullptr)
+    {
+        d3DContext.pInputLayout->Release();
+
+        d3DContext.pInputLayout = nullptr;
+    }
+
+    if (d3DContext.pBuffer != nullptr)
+    {
+        d3DContext.pBuffer->Release();
+
+        d3DContext.pBuffer = nullptr;
+    }
+}
+
+/**
  * @brief
  */
 BOOL D3D::SetInputLayout(ID3DBlob* pCode)
@@ -286,30 +338,6 @@ BOOL D3D::SetInputLayout(ID3DBlob* pCode)
 }
 
 /**
- * @brief Создать вершинный шейдер.
- */
-BOOL D3D::CreateVertexShader()
-{
-    ID3DBlob* pCode = nullptr;								// Код вершинного шейдера.
-
-    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
-
-    if (d3DContext.pVertexShader == nullptr) { pCode->Release(); return FALSE; }
-
-    HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
-
-    if (SUCCEEDED(hr) != TRUE) { pCode->Release(); return FALSE; }
-
-    if (SetInputLayout(pCode) != TRUE) { pCode->Release(); return FALSE;}
-
-    if (SetVertexBuffer() != TRUE) { DeInit(); return FALSE; }
-
-    pCode->Release();
-
-    return SUCCEEDED(hr);
-}
-
-/**
  * @brief Создать фрагментный шейдер.
  */
 BOOL D3D::CreatePixelShader()
@@ -327,6 +355,8 @@ BOOL D3D::CreatePixelShader()
     if (SUCCEEDED(hr) != TRUE) { return FALSE; }
 
     if (SetSamplerState() != TRUE) { return FALSE; }
+
+    if (SetShaderResource() != TRUE) { return FALSE; }
 
     return TRUE;
 }
@@ -360,6 +390,65 @@ BOOL D3D::SetSamplerState()
     return TRUE;
 }
 
+/**
+ * @brief
+ */
+void D3D::DestroyPixelShader()
+{
+    if (d3DContext.pPixelShader != nullptr)
+    {
+        d3DContext.pPixelShader->Release();
+
+        d3DContext.pPixelShader = nullptr;
+    }
+
+    if (d3DContext.pSamplerState != nullptr)
+    {
+        d3DContext.pSamplerState->Release();
+
+        d3DContext.pSamplerState = nullptr;
+    }
+
+    if (d3DContext.pShaderResourceView != nullptr)
+    {
+        d3DContext.pShaderResourceView->Release();
+
+        d3DContext.pShaderResourceView = nullptr;
+    }
+}
+
+/**
+ * @brief Загрузить ресурс.
+ */
+BOOL D3D::LoadTextureFromFile(LPCWSTR pSrcFile)
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvd = {};
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateShaderResourceView(d3DContext.pTexture2D, &srvd, &d3DContext.pShaderResourceView);
+
+    assert(SUCCEEDED(hr) == TRUE);
+
+    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
+
+    assert(d3DContext.pShaderResourceView != nullptr);
+
+    if (d3DContext.pShaderResourceView == nullptr) { return FALSE; }
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief Установить ресурс.
+ */
+BOOL D3D::SetShaderResource()
+{
+    if (LoadTextureFromFile((LPCWSTR)L"1.PNG") != TRUE) { return FALSE; }
+
+    d3DContext.pD3DDeviceContext->PSSetShaderResources((UINT)0U, (UINT)1U, &d3DContext.pShaderResourceView);
+
+    return TRUE;
+}
+
 //
 
 /**
@@ -388,6 +477,9 @@ BOOL D3D::Init(HWND hWnd)
  */
 VOID D3D::DeInit()
 {
+    DestroyPixelShader();
+    DestroyVertexShader();
+
     DestroyTargetView();
 
     DestroyDeviceAndSwapChain();
