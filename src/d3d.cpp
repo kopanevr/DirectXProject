@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <D3DCompiler.h>
 #include <DirectXTex.h>
+#include <wincodec.h>
 
 #include <cassert>
 
@@ -326,7 +327,13 @@ BOOL D3D::SetInputLayout(ID3DBlob* pCode)
 
     UINT numElements = (UINT)ARRAYSIZE(ied);
 
-    HRESULT hr = d3DContext.pD3DDevice->CreateInputLayout(ied, numElements, (const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), &d3DContext.pInputLayout);
+    HRESULT hr = d3DContext.pD3DDevice->CreateInputLayout(
+        ied,
+        numElements,
+        (const void*)pCode->GetBufferPointer(),
+        (SIZE_T)pCode->GetBufferSize(),
+        &d3DContext.pInputLayout
+    );
 
     assert(SUCCEEDED(hr) == TRUE);
 
@@ -356,7 +363,7 @@ BOOL D3D::CreatePixelShader()
 
     if (SetSamplerState() != TRUE) { return FALSE; }
 
-    if (SetShaderResource() != TRUE) { return FALSE; }
+    if (SetShaderResourceView() != TRUE) { return FALSE; }
 
     return TRUE;
 }
@@ -418,21 +425,35 @@ void D3D::DestroyPixelShader()
 }
 
 /**
- * @brief Загрузить ресурс.
+ * @brief
  */
-BOOL D3D::LoadTextureFromFile(LPCWSTR pSrcFile)
+BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
 {
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvd = {};
+    DirectX::TexMetadata texMetadata        = {};
+    DirectX::ScratchImage scratchImage      = {};
 
-    HRESULT hr = d3DContext.pD3DDevice->CreateShaderResourceView(d3DContext.pTexture2D, &srvd, &d3DContext.pShaderResourceView);
+    HRESULT hr = DirectX::LoadFromWICFile(
+        szFile,
+        DirectX::WIC_FLAGS_NONE,
+        &texMetadata,
+        scratchImage);
 
     assert(SUCCEEDED(hr) == TRUE);
 
     if (SUCCEEDED(hr) != TRUE) { return FALSE; }
 
+    hr = DirectX::CreateShaderResourceView(
+        d3DContext.pD3DDevice,
+        scratchImage.GetImage((size_t)0U, (size_t)0U, (size_t)0U),
+        scratchImage.GetImageCount(),
+        texMetadata,
+        &d3DContext.pShaderResourceView);
+
     assert(d3DContext.pShaderResourceView != nullptr);
 
-    if (d3DContext.pShaderResourceView == nullptr) { return FALSE; }
+    assert(d3DContext.pShaderResourceView == nullptr);
+
+    assert(SUCCEEDED(hr) == TRUE);
 
     return SUCCEEDED(hr);
 }
@@ -440,9 +461,9 @@ BOOL D3D::LoadTextureFromFile(LPCWSTR pSrcFile)
 /**
  * @brief Установить ресурс.
  */
-BOOL D3D::SetShaderResource()
+BOOL D3D::SetShaderResourceView()
 {
-    if (LoadTextureFromFile((LPCWSTR)L"1.PNG") != TRUE) { return FALSE; }
+    if (CreateShaderResourceView(L"1.PNG") != TRUE) { return FALSE; }
 
     d3DContext.pD3DDeviceContext->PSSetShaderResources((UINT)0U, (UINT)1U, &d3DContext.pShaderResourceView);
 
@@ -475,7 +496,7 @@ BOOL D3D::Init(HWND hWnd)
 /**
  * @brief
  */
-VOID D3D::DeInit()
+void D3D::DeInit()
 {
     DestroyPixelShader();
     DestroyVertexShader();

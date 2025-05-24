@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-class Window
+class Window final
 {
 private:
 	static LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// Оконная процедура.
@@ -10,13 +10,21 @@ private:
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
-	BOOL RegisterWindowClass();																// Регистрация класса.
+	BOOL RegisterWindowClass()						const noexcept;							// Регистрация класса.
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
-	BOOL CreateWindowInstance();															// Созданик окна.
+	BOOL UnregisterWindowClass()					const noexcept;
+#if __cplusplus > 201703L
+	[[nodiscard]]
+#endif
+	BOOL CreateWindowInstance()						noexcept;								// Создание окна.
+#if __cplusplus > 201703L
+	[[nodiscard]]
+#endif
+	BOOL DestroyWindowInstance()					const noexcept;
 private:
-	HINSTANCE hIstance								= {};
+	HINSTANCE hInstance								= {};
 	HWND hWnd										= {};
 
 	LPCSTR lpClassName								= nullptr;

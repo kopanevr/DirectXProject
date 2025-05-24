@@ -23,7 +23,7 @@ struct Vertex
 /**
  * @brief Вершины фигуры.
  */
-Vertex vertices[] = {
+static Vertex vertices[] = {
     { 0.0f,  0.5f,  0.0f,    0.5f,  0.0f },
     { 0.5f, -0.5f,  0.0f,    1.0f,  1.0f },
     {-0.5f, -0.5f,  0.0f,    0.0f,  1.0f }
@@ -100,11 +100,11 @@ private:
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL LoadTextureFromFile(LPCWSTR pSrcFile);
+    BOOL CreateShaderResourceView(const wchar_t* szFile);
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetShaderResource();
+    BOOL SetShaderResourceView();
 
     //
 private:
