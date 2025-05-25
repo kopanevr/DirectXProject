@@ -5,6 +5,26 @@
  */
 void UI::body() const noexcept
 {
+	ImGui::Begin(
+		"1",
+		nullptr,
+		ImGuiWindowFlags_NoTitleBar			|
+		ImGuiWindowFlags_AlwaysAutoResize		|
+		ImGuiWindowFlags_NoMove
+	);
+
+	//
+
+	if (ImGui::CollapsingHeader("General") == true)
+	{
+		//
+	}
+
+	ImGui::Text("");
+
+	//
+
+	ImGui::End();
 }
 
 /**
