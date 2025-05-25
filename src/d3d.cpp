@@ -505,3 +505,11 @@ void D3D::DeInit()
 
     DestroyDeviceAndSwapChain();
 }
+
+/**
+ * @brief
+ */
+D3DContext* D3D::GetD3DContext()
+{
+    return &d3DContext;
+}

@@ -127,16 +127,42 @@ BOOL Window::DestroyWindowInstance() const noexcept
 Window::Window(LPCSTR lpClassName, LPCSTR lpWindowName)
 	:	lpClassName(lpClassName),
 		lpWindowName(lpWindowName)
-{}
+{
+	if (RegisterWindowClass() == FALSE) { startUpFlag = FALSE; return; }
+
+	if (CreateWindowInstance() == FALSE) { startUpFlag = FALSE; return; }
+
+	if (d3D.Init(hWnd) == FALSE) { startUpFlag = FALSE; return; };
+
+	if (ui.Init(hWnd, d3D.GetD3DContext()->pD3DDevice, d3D.GetD3DContext()->pD3DDeviceContext) == FALSE) { startUpFlag = FALSE; };
+}
 
 /**
  * @brief
  */
 Window::~Window()
 {
+	ui.DeInit();
+
+	d3D.DeInit();
+
+	if (DestroyWindowInstance() == FALSE) {  }
+
+	if (UnregisterWindowClass() == FALSE) {  }
+
 	hInstance		= nullptr;
 	hWnd			= nullptr;
 
 	lpClassName		= nullptr;
 	lpWindowName		= nullptr;
+}
+
+/**
+ * @brief
+ */
+void Window::Loop()
+{
+	if (startUpFlag == FALSE) { return; }
+
+	//
 }

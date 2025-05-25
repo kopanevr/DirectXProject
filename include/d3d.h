@@ -118,5 +118,10 @@ public:
 #endif
     BOOL Init(HWND hWnd);
     void DeInit();
+
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    D3DContext* GetD3DContext();
 };
 }

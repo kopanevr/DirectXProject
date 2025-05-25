@@ -10,7 +10,13 @@ class UI final
 {
 private:
 	void body()																						const noexcept;
+
+	UI(const UI&)																					= delete;
+	UI& operator=(const UI&)																		= delete;
 public:
+	UI()																							= default;
+	~UI()																							= default;
+
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
