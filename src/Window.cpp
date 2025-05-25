@@ -138,5 +138,5 @@ Window::~Window()
 	hWnd			= nullptr;
 
 	lpClassName		= nullptr;
-	lpWindowName	= nullptr;
+	lpWindowName		= nullptr;
 }
