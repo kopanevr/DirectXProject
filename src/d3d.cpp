@@ -114,13 +114,7 @@ BOOL D3D::CreateTargetView()
 
     if (FAILED(hr) == TRUE) { return FALSE; }
 
-    D3D11_RENDER_TARGET_VIEW_DESC rtvd = {};
-
-    rtvd.Format                 = DXGI_FORMAT_R8G8B8A8_UNORM;
-    rtvd.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE2D;
-    rtvd.Texture2D.MipSlice     = (UINT)0U;
-
-    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)&pBackBuffer, &rtvd, &d3DContext.pRenderTargetView);
+    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pBackBuffer, nullptr, &d3DContext.pRenderTargetView);
 
     pBackBuffer->Release();
 
@@ -228,7 +222,7 @@ BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR p
 
     //
 
-    pErrorMsgs->Release();
+    if (pErrorMsgs != nullptr) { pErrorMsgs->Release(); }
 
     assert(SUCCEEDED(hr) == TRUE);
 
@@ -291,7 +285,7 @@ void D3D::DestroyVertexBuffer()
  */
 BOOL D3D::CreateVertexShader()
 {
-    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &d3DContext.pVertexCode) != TRUE) { d3DContext.pVertexCode->Release(); return FALSE; }
+    if (CompileShaderFromFile((LPCWSTR)L"src/1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &d3DContext.pVertexCode) != TRUE) { return FALSE; }
 
     HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)d3DContext.pVertexCode->GetBufferPointer(), (SIZE_T)d3DContext.pVertexCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
 
@@ -388,9 +382,9 @@ void D3D::SetInputLayout()
  */
 BOOL D3D::CreatePixelShader()
 {
-    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"PixelMain", "ps_5_0", &d3DContext.pPixelCode) != TRUE) { return FALSE; }
+    if (CompileShaderFromFile((LPCWSTR)L"src/1.hlsl", (LPCSTR)"PixelMain", "ps_5_0", &d3DContext.pPixelCode) != TRUE) { return FALSE; }
 
-    if (d3DContext.pPixelShader == nullptr) { d3DContext.pPixelCode->Release(); return FALSE; }
+    if (d3DContext.pPixelCode == nullptr) { return FALSE; }
 
     HRESULT hr = d3DContext.pD3DDevice->CreatePixelShader((const void*)d3DContext.pPixelCode->GetBufferPointer(), (SIZE_T)d3DContext.pPixelCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader);
 
@@ -551,20 +545,26 @@ BOOL D3D::Init(HWND hWnd)
 
     if (SetViewport(hWnd) != TRUE) { DeInit(); return FALSE; }
 
+    //
+
+    if (CreateVertexShader() != TRUE) { DeInit(); return FALSE; }
+
+    //
+
     if (CreateInputLayout() != TRUE) { DeInit(); return FALSE; }
 
     if (CreateVertexBuffer() != TRUE) { DeInit(); return FALSE; }
 
     if (CreateSamplerState() != TRUE) { DeInit(); return FALSE; }
 
-    if (CreateShaderResourceView(L"1.PNG") != TRUE) { DeInit(); return FALSE; }
-
     //
 
-    if (CreateVertexShader() != TRUE) { DeInit(); return FALSE; }
     if (CreatePixelShader() != TRUE) { DeInit(); return FALSE; }
 
     //
+
+    if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { DeInit(); return FALSE; }
+
 
     return TRUE;
 }
