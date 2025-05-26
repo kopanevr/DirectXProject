@@ -10,12 +10,12 @@ using namespace ND3D;
 class Window final
 {
 private:
-	static LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// Оконная процедура.
+	static LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);								// Оконная процедура.
 
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
-	BOOL RegisterWindowClass()							const noexcept;							// Регистрация класса.
+	BOOL RegisterWindowClass()							noexcept;							// Регистрация класса.
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
@@ -23,24 +23,26 @@ private:
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
-	BOOL CreateWindowInstance()							noexcept;								// Создание окна.
+	BOOL CreateWindowInstance()							noexcept;							// Создание окна.
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
 	BOOL DestroyWindowInstance()							const noexcept;
 private:
-	HINSTANCE hInstance								= {};
+	HINSTANCE hInstance;
 	HWND hWnd									= {};
 
 	LPCSTR lpClassName								= nullptr;
 	LPCSTR lpWindowName								= nullptr;
 
-	BOOL startUpFlag								= FALSE;
+	BOOL startUpFlag								= TRUE;
 
 	UI ui										= {};
 	D3D d3D										= {};
+
+	static Window* pThis;
 public:
-	Window(LPCSTR lpClassName, LPCSTR lpWindowName);
+	Window(LPCSTR lpClassName = (LPCSTR)"DefaultClassName", LPCSTR lpWindowName = (LPCSTR)"DefaultWindowName");
 	~Window();
 
 	void Loop();

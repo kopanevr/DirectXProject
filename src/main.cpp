@@ -5,9 +5,11 @@
 #include "Window.h"
 #include "D3D.h" 
 
-int main()
+int main(int argc, char* argv[])
 {
-	Window((LPSTR)"SampleClassName", (LPSTR)"SampleWindowName");
+	Window wnd;
+
+	wnd.Loop();
 
 	return 0;
 }

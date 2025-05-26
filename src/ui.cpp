@@ -3,7 +3,7 @@
 /**
  * @brief
  */
-void UI::body() const noexcept
+void UI::Body() const noexcept
 {
 	ImGui::Begin(
 		"1",
@@ -26,6 +26,27 @@ void UI::body() const noexcept
 
 	ImGui::End();
 }
+
+/**
+ * @brief
+ */
+void UI::Setup() const noexcept
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+
+/**
+ * @brief
+ */
+void UI::Render() const noexcept
+{
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+//
 
 /**
  * @brief
@@ -57,34 +78,25 @@ void UI::DeInit() noexcept
 /**
  * @brief
  */
+LRESULT UI::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+}
+
+/**
+ * @brief
+ */
 void UI::Run() const noexcept
 {
 	Setup();
 
 	//
 
-	body();
+	Body();
 
 	//
 
 	Render();
-}
-
-/**
- * @brief
- */
-void UI::Setup() const noexcept
-{
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-}
-
-/**
- * @brief
- */
-void UI::Render() const noexcept
-{
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }

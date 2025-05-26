@@ -14,8 +14,6 @@
 
 using namespace ND3D;
 
-#define CGE
-
 /**
  * @brief
  */
@@ -32,7 +30,7 @@ BOOL D3D::CreateDeviceAndSwapChain(HWND hWnd)
     sd.BufferDesc.Width                     = (UINT)0U;                                 // Ширина.
     sd.BufferDesc.Height                    = (UINT)0U;                                 // Высота.
     sd.BufferDesc.Format                    = DXGI_FORMAT_R8G8B8A8_UNORM;               // Формат пикселей.
-    sd.BufferDesc.RefreshRate.Numerator     = (UINT)60U;                                // Чеслитель.
+    sd.BufferDesc.RefreshRate.Numerator     = (UINT)60U;                                // Числитель.
     sd.BufferDesc.RefreshRate.Denominator   = (UINT)1U;                                 // Знаменатель.
 
     sd.BufferUsage                          = DXGI_USAGE_RENDER_TARGET_OUTPUT; 
@@ -45,22 +43,29 @@ BOOL D3D::CreateDeviceAndSwapChain(HWND hWnd)
 
     IDXGIAdapter* pAdapter = GetAdapter(1U);
 
+    D3D_FEATURE_LEVEL featureLevel;
+
+    D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_11_0
+    };
+
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
         pAdapter,                                                                       // Графический адаптер.
-        D3D_DRIVER_TYPE_HARDWARE,                                                       // Тип драйвера.
+        D3D_DRIVER_TYPE_UNKNOWN,                                                        // Тип драйвера.
         nullptr,                                                                        // Программный драйвер.
         (UINT)0U,                                                                       // Флаги.
-        nullptr,
-        (UINT)0U,
+        featureLevels,
+        (UINT)ARRAYSIZE(featureLevels),
         D3D11_SDK_VERSION,                                                              // Версия SDK.
         &sd,
         &d3DContext.pSwapChain,
         &d3DContext.pD3DDevice,
-        nullptr,
+        &featureLevel,
         &d3DContext.pD3DDeviceContext
     );
 
     pAdapter->Release();
+
     pAdapter = nullptr;
 
     assert(d3DContext.pSwapChain != nullptr);
@@ -109,7 +114,13 @@ BOOL D3D::CreateTargetView()
 
     if (FAILED(hr) == TRUE) { return FALSE; }
 
-    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)&pBackBuffer, nullptr, &d3DContext.pRenderTargetView);
+    D3D11_RENDER_TARGET_VIEW_DESC rtvd = {};
+
+    rtvd.Format                 = DXGI_FORMAT_R8G8B8A8_UNORM;
+    rtvd.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvd.Texture2D.MipSlice     = (UINT)0U;
+
+    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)&pBackBuffer, &rtvd, &d3DContext.pRenderTargetView);
 
     pBackBuffer->Release();
 
@@ -134,7 +145,6 @@ IDXGIAdapter* D3D::GetAdapter(const UINT i) const
     if (FAILED(pFactory->EnumAdapters(i, &pAdapter))) { return nullptr; }               // Получение графического адаптера.
 
     pFactory->Release();
-    pFactory = nullptr;
 
     return pAdapter;
 }
@@ -150,6 +160,19 @@ void D3D::DestroyTargetView()
 
         d3DContext.pRenderTargetView = nullptr;
     }
+}
+
+/**
+ * @brief
+ */
+void D3D::ClearTargetView()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pRenderTargetView == nullptr) { return; }
+
+    const FLOAT сolorRGBA[4] = {(FLOAT)0.2f, (FLOAT)0.298f, (FLOAT)0.29f, (FLOAT)1.0f};
+
+    d3DContext.pD3DDeviceContext->ClearRenderTargetView(d3DContext.pRenderTargetView, сolorRGBA);
 }
 
 /**
@@ -213,9 +236,9 @@ BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR p
 }
 
 /**
- * @brief Создать фрагментный шейдер.
+ * @brief
  */
-BOOL D3D::SetVertexBuffer()
+BOOL D3D::CreateVertexBuffer()
 {
     D3D11_BUFFER_DESC bd = {};
 
@@ -234,63 +257,27 @@ BOOL D3D::SetVertexBuffer()
 
     //
 
-    HRESULT hr = d3DContext.pD3DDevice->CreateBuffer(&bd, &sd, &d3DContext.pBuffer);
+    return SUCCEEDED(d3DContext.pD3DDevice->CreateBuffer(&bd, &sd, &d3DContext.pBuffer));
+}
 
-    assert(SUCCEEDED(hr) == TRUE);
-
-    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
-
-    if (d3DContext.pD3DDeviceContext == nullptr) { return FALSE; }
+/**
+ * @brief
+ */
+void D3D::SetVertexBuffer()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
 
     UINT stride = (UINT)sizeof(Vertex);							// Шаг.
     UINT offset = (UINT)0U;								// Смещение.
 
     d3DContext.pD3DDeviceContext->IASetVertexBuffers((UINT)0U, (UINT)1U, &d3DContext.pBuffer, &stride, &offset);
-
-    return TRUE;
 }
 
 /**
- * @brief Создать вершинный шейдер.
+ * @brief
  */
-BOOL D3D::CreateVertexShader()
+void D3D::DestroyVertexBuffer()
 {
-    ID3DBlob* pCode = nullptr;								// Код вершинного шейдера.
-
-    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
-
-    HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
-
-    if (SUCCEEDED(hr) != TRUE) { pCode->Release(); return FALSE; }
-
-    if (SetInputLayout(pCode) != TRUE) { pCode->Release(); return FALSE;}
-
-    if (SetVertexBuffer() != TRUE) { DeInit(); return FALSE; }
-
-    pCode->Release();
-
-    return SUCCEEDED(hr);
-}
-
-/**
- * @brief Создать вершинный шейдер.
- */
-void D3D::DestroyVertexShader()
-{
-    if (d3DContext.pVertexShader != nullptr)
-    {
-        d3DContext.pVertexShader->Release();
-
-        d3DContext.pVertexShader = nullptr;
-    }
-
-    if (d3DContext.pInputLayout != nullptr)
-    {
-        d3DContext.pInputLayout->Release();
-
-        d3DContext.pInputLayout = nullptr;
-    }
-
     if (d3DContext.pBuffer != nullptr)
     {
         d3DContext.pBuffer->Release();
@@ -300,9 +287,45 @@ void D3D::DestroyVertexShader()
 }
 
 /**
+ * @brief Создать вершинный шейдер.
+ */
+BOOL D3D::CreateVertexShader()
+{
+    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"VertexMain", "vs_5_0", &d3DContext.pVertexCode) != TRUE) { d3DContext.pVertexCode->Release(); return FALSE; }
+
+    HRESULT hr = d3DContext.pD3DDevice->CreateVertexShader((const void*)d3DContext.pVertexCode->GetBufferPointer(), (SIZE_T)d3DContext.pVertexCode->GetBufferSize(), nullptr, &d3DContext.pVertexShader);
+
+    return SUCCEEDED(hr);
+}
+
+/**
  * @brief
  */
-BOOL D3D::SetInputLayout(ID3DBlob* pCode)
+void D3D::DestroyVertexShader()
+{
+    if (d3DContext.pVertexShader != nullptr)
+    {
+        d3DContext.pVertexShader->Release();
+
+        d3DContext.pVertexShader = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+void D3D::SetVertexShader()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pVertexShader == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->VSSetShader(d3DContext.pVertexShader, nullptr, (UINT)0);
+}
+
+/**
+ * @brief
+ */
+BOOL D3D::CreateInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC ied[] = {
         {
@@ -327,21 +350,37 @@ BOOL D3D::SetInputLayout(ID3DBlob* pCode)
 
     UINT numElements = (UINT)ARRAYSIZE(ied);
 
-    HRESULT hr = d3DContext.pD3DDevice->CreateInputLayout(
+    return SUCCEEDED(d3DContext.pD3DDevice->CreateInputLayout(
         ied,
         numElements,
-        (const void*)pCode->GetBufferPointer(),
-        (SIZE_T)pCode->GetBufferSize(),
+        (const void*)d3DContext.pVertexCode->GetBufferPointer(),
+        (SIZE_T)d3DContext.pVertexCode->GetBufferSize(),
         &d3DContext.pInputLayout
-    );
+    ));
+}
 
-    assert(SUCCEEDED(hr) == TRUE);
+/**
+ * @brief
+ */
+void D3D::DestroyInputLayout()
+{
+    if (d3DContext.pInputLayout != nullptr)
+    {
+        d3DContext.pInputLayout->Release();
 
-    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
+        d3DContext.pInputLayout = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+void D3D::SetInputLayout()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pInputLayout == nullptr) { return; }
 
     d3DContext.pD3DDeviceContext->IASetInputLayout(d3DContext.pInputLayout);
-
-    return TRUE;
 }
 
 /**
@@ -349,29 +388,19 @@ BOOL D3D::SetInputLayout(ID3DBlob* pCode)
  */
 BOOL D3D::CreatePixelShader()
 {
-    ID3DBlob* pCode = nullptr;								// Код фрагментного шейдера.
+    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"PixelMain", "ps_5_0", &d3DContext.pPixelCode) != TRUE) { return FALSE; }
 
-    if (CompileShaderFromFile((LPCWSTR)L"1.hlsl", (LPCSTR)"PixelMain", "ps_5_0", &pCode) != TRUE) { pCode->Release(); return FALSE; }
+    if (d3DContext.pPixelShader == nullptr) { d3DContext.pPixelCode->Release(); return FALSE; }
 
-    if (d3DContext.pPixelShader == nullptr) { pCode->Release(); return FALSE; }
+    HRESULT hr = d3DContext.pD3DDevice->CreatePixelShader((const void*)d3DContext.pPixelCode->GetBufferPointer(), (SIZE_T)d3DContext.pPixelCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader);
 
-    HRESULT hr = d3DContext.pD3DDevice->CreatePixelShader((const void*)pCode->GetBufferPointer(), (SIZE_T)pCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader);
-
-    pCode->Release();
-
-    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
-
-    if (SetSamplerState() != TRUE) { return FALSE; }
-
-    if (SetShaderResourceView() != TRUE) { return FALSE; }
-
-    return TRUE;
+    return SUCCEEDED(hr);
 }
 
 /**
  * @brief
  */
-BOOL D3D::SetSamplerState()
+BOOL D3D::CreateSamplerState()
 {
     D3D11_SAMPLER_DESC sd = {};
 
@@ -384,17 +413,22 @@ BOOL D3D::SetSamplerState()
     sd.ComparisonFunc   = D3D11_COMPARISON_NEVER;
 
     sd.MinLOD           = (FLOAT)0.0f;
-    sd.MaxLOD           = (FLOAT)D3D11_FLOAT32_MAX;
+    sd.MaxLOD           = D3D11_FLOAT32_MAX;
 
-    HRESULT hr = d3DContext.pD3DDevice->CreateSamplerState(&sd, &d3DContext.pSamplerState);
+    return SUCCEEDED(d3DContext.pD3DDevice->CreateSamplerState(&sd, &d3DContext.pSamplerState));
+}
 
-    assert(SUCCEEDED(hr) == TRUE);
+/**
+ * @brief
+ */
+void D3D::DestroySamplerState()
+{
+    if (d3DContext.pSamplerState != nullptr)
+    {
+        d3DContext.pSamplerState->Release();
 
-    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
-
-    d3DContext.pD3DDeviceContext->PSSetSamplers((UINT)0U, (UINT)1U, &d3DContext.pSamplerState);
-
-    return TRUE;
+        d3DContext.pSamplerState = nullptr;
+    }
 }
 
 /**
@@ -408,20 +442,29 @@ void D3D::DestroyPixelShader()
 
         d3DContext.pPixelShader = nullptr;
     }
+}
 
-    if (d3DContext.pSamplerState != nullptr)
-    {
-        d3DContext.pSamplerState->Release();
+/**
+ * @brief
+ */
+void D3D::SetSamplerState()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pSamplerState == nullptr) { return; }
 
-        d3DContext.pSamplerState = nullptr;
-    }
+    d3DContext.pD3DDeviceContext->PSSetSamplers((UINT)0U, (UINT)1U, &d3DContext.pSamplerState);
+}
 
-    if (d3DContext.pShaderResourceView != nullptr)
-    {
-        d3DContext.pShaderResourceView->Release();
 
-        d3DContext.pShaderResourceView = nullptr;
-    }
+/**
+ * @brief
+ */
+void D3D::SetPixelShader()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pPixelShader == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->PSSetShader(d3DContext.pPixelShader, nullptr, (UINT)0);
 }
 
 /**
@@ -442,32 +485,57 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
 
     if (SUCCEEDED(hr) != TRUE) { return FALSE; }
 
-    hr = DirectX::CreateShaderResourceView(
+    return SUCCEEDED(hr = DirectX::CreateShaderResourceView(
         d3DContext.pD3DDevice,
         scratchImage.GetImage((size_t)0U, (size_t)0U, (size_t)0U),
         scratchImage.GetImageCount(),
         texMetadata,
-        &d3DContext.pShaderResourceView);
+        &d3DContext.pShaderResourceView
+    ));
+}
 
-    assert(d3DContext.pShaderResourceView != nullptr);
+/**
+ * @brief
+ */
+void D3D::DestroyShaderResourceView()
+{
+    if (d3DContext.pShaderResourceView != nullptr)
+    {
+        d3DContext.pShaderResourceView->Release();
 
-    assert(d3DContext.pShaderResourceView == nullptr);
-
-    assert(SUCCEEDED(hr) == TRUE);
-
-    return SUCCEEDED(hr);
+        d3DContext.pShaderResourceView = nullptr;
+    }
 }
 
 /**
  * @brief Установить ресурс.
  */
-BOOL D3D::SetShaderResourceView()
+void D3D::SetShaderResourceView()
 {
-    if (CreateShaderResourceView(L"1.PNG") != TRUE) { return FALSE; }
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pShaderResourceView == nullptr) { return; }
 
     d3DContext.pD3DDeviceContext->PSSetShaderResources((UINT)0U, (UINT)1U, &d3DContext.pShaderResourceView);
+}
 
-    return TRUE;
+/**
+ * @brief Отрендерить.
+ */
+void D3D::Draw()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->Draw((UINT)3U, (UINT)0U);
+}
+
+/**
+ * @brief Переключить буферы.
+ */
+BOOL D3D::Present()
+{
+    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+
+    return SUCCEEDED(d3DContext.pSwapChain->Present((UINT)0U, (UINT)0U));
 }
 
 //
@@ -482,6 +550,14 @@ BOOL D3D::Init(HWND hWnd)
     if (CreateTargetView() != TRUE) { DeInit(); return FALSE; }
 
     if (SetViewport(hWnd) != TRUE) { DeInit(); return FALSE; }
+
+    if (CreateInputLayout() != TRUE) { DeInit(); return FALSE; }
+
+    if (CreateVertexBuffer() != TRUE) { DeInit(); return FALSE; }
+
+    if (CreateSamplerState() != TRUE) { DeInit(); return FALSE; }
+
+    if (CreateShaderResourceView(L"1.PNG") != TRUE) { DeInit(); return FALSE; }
 
     //
 
@@ -501,6 +577,14 @@ void D3D::DeInit()
     DestroyPixelShader();
     DestroyVertexShader();
 
+    DestroyShaderResourceView();
+
+    DestroySamplerState();
+
+    DestroyVertexBuffer();
+
+    DestroyInputLayout();
+
     DestroyTargetView();
 
     DestroyDeviceAndSwapChain();
@@ -512,4 +596,30 @@ void D3D::DeInit()
 D3DContext* D3D::GetD3DContext()
 {
     return &d3DContext;
+}
+
+/**
+ * @brief
+ */
+void D3D::Render()
+{
+    ClearTargetView();
+
+    //
+
+    SetInputLayout();
+
+    SetVertexShader();
+    SetPixelShader();
+
+    SetVertexBuffer();
+
+    SetSamplerState();
+    SetShaderResourceView();
+
+    //
+
+    Draw();                                 						// Отрендерить.
+
+    if (Present() != TRUE) {  }     						    	// Переключить буферы.
 }

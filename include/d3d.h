@@ -16,14 +16,15 @@ struct Vertex
     FLOAT y = (FLOAT)0.0f;
     FLOAT z = (FLOAT)0.0f;
 
-    FLOAT u = (FLOAT)0.0f;						// Текстурные координата.
-    FLOAT v = (FLOAT)0.0f;						// Текстурные координата.
+    FLOAT u = (FLOAT)0.0f;						// Текстурная координата.
+    FLOAT v = (FLOAT)0.0f;						// Текстурная координата.
 };
 
 /**
  * @brief Вершины фигуры.
  */
 static Vertex vertices[] = {
+//                           u      v
     { 0.0f,  0.5f,  0.0f,    0.5f,  0.0f },
     { 0.5f, -0.5f,  0.0f,    1.0f,  1.0f },
     {-0.5f, -0.5f,  0.0f,    0.0f,  1.0f }
@@ -35,9 +36,11 @@ struct D3DContext final
     IDXGISwapChain*             pSwapChain              = nullptr;
     ID3D11DeviceContext*        pD3DDeviceContext       = nullptr;
     ID3D11RenderTargetView*     pRenderTargetView       = nullptr;
+    ID3DBlob*                   pVertexCode             = nullptr;
     ID3D11Buffer*               pBuffer                 = nullptr;      // Вершинный буфер.
     ID3D11VertexShader*         pVertexShader           = nullptr;      // Вершинный шейдер.
     ID3D11PixelShader*          pPixelShader            = nullptr;      // Фрагментный шейдер.
+    ID3DBlob*                   pPixelCode              = nullptr;
     ID3D11InputLayout*          pInputLayout            = nullptr;
     ID3D11SamplerState*         pSamplerState           = nullptr;
     ID3D11Texture2D*            pTexture2D              = nullptr;      // Текстура.
@@ -62,12 +65,9 @@ private:
     BOOL CreateTargetView();
     void DestroyTargetView();
 
-    IDXGIAdapter* GetAdapter(const UINT i)              const;
+    void ClearTargetView();
 
-#if __cplusplus > 201703L
-    [[nodiscard]]
-#endif
-    BOOL SetViewport(HWND hWnd)                         const;
+    IDXGIAdapter* GetAdapter(const UINT i)              const;
 
     //
 
@@ -75,38 +75,56 @@ private:
     [[nodiscard]]
 #endif
     BOOL CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR pTarget, ID3DBlob** ppCode);
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetVertexBuffer();
+    BOOL CreateVertexBuffer();
+    void DestroyVertexBuffer();
+    void SetVertexBuffer();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL CreateVertexShader();
     void DestroyVertexShader();
-    BOOL SetInputLayout(ID3DBlob* pCode);
+    void SetVertexShader();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
+    BOOL CreateInputLayout();
+    void DestroyInputLayout();
+    void SetInputLayout();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL CreatePixelShader();
     void DestroyPixelShader();
+    void SetPixelShader();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetSamplerState();
+    BOOL CreateSamplerState();
+    void DestroySamplerState();
+    void SetSamplerState();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL CreateShaderResourceView(const wchar_t* szFile);
+    void DestroyShaderResourceView();
+    void SetShaderResourceView();
+
+    //
+
+    void Draw();
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
-    BOOL SetShaderResourceView();
-
-    //
+    BOOL Present();
 private:
     D3DContext d3DContext                               = {};
 public:
@@ -122,6 +140,12 @@ public:
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
+    BOOL SetViewport(HWND hWnd)                         const;
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
     D3DContext* GetD3DContext();
+
+    void Render();
 };
 }

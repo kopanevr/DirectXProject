@@ -9,13 +9,18 @@
  */
 LRESULT CALLBACK Window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	const LRESULT rs = pThis->ui.HandleMessage(hWnd, uMsg, wParam, lParam);
+
+	if (rs != (LRESULT)0) { return rs; }
+
 	switch (uMsg)
 	{
 	case WM_DESTROY:
 		PostQuitMessage(0);
-		
+
 		return (LRESULT)0;
 	case WM_SIZE:
+		if (pThis->d3D.SetViewport(hWnd) == TRUE) { break; };
 
 		return (LRESULT)0;
 	default:
@@ -28,9 +33,15 @@ LRESULT CALLBACK Window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 /**
  * @brief Зарегестрировать класс окна.
  */
-BOOL Window::RegisterWindowClass() const noexcept
+BOOL Window::RegisterWindowClass() noexcept
 {
 	if (lpClassName == nullptr) { return FALSE; }
+
+	hInstance = (HINSTANCE)GetModuleHandleA(nullptr);
+
+	assert(hInstance != nullptr);
+
+	if (hInstance == nullptr) { return FALSE; }
 
 	WNDCLASSA w = {};
 
@@ -76,8 +87,6 @@ BOOL Window::CreateWindowInstance() noexcept
 
 	if (lpClassName == nullptr || lpWindowName == nullptr) { return FALSE; }
 
-	if (RegisterWindowClass() == FALSE) { return FALSE; }
-
 	hWnd = CreateWindowA(
 		lpClassName,
 		lpWindowName,
@@ -119,6 +128,8 @@ BOOL Window::DestroyWindowInstance() const noexcept
 #endif
 }
 
+Window* Window::pThis = nullptr;
+
 //
 
 /**
@@ -128,6 +139,8 @@ Window::Window(LPCSTR lpClassName, LPCSTR lpWindowName)
 	:	lpClassName(lpClassName),
 		lpWindowName(lpWindowName)
 {
+	pThis = this;
+
 	if (RegisterWindowClass() == FALSE) { startUpFlag = FALSE; return; }
 
 	if (CreateWindowInstance() == FALSE) { startUpFlag = FALSE; return; }
@@ -165,4 +178,32 @@ void Window::Loop()
 	if (startUpFlag == FALSE) { return; }
 
 	//
+
+	MSG msg = {};
+
+    BOOL state = FALSE;
+
+	while (state == FALSE)
+	{
+		if (PeekMessageA(&msg, nullptr, (UINT)0U, (UINT)0U, PM_REMOVE) == TRUE)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+
+			if (msg.message == WM_QUIT)
+			{
+				state = TRUE;
+			}
+		}
+
+		if (state == TRUE) { break; }
+
+		//
+
+		d3D.Render();
+
+		//
+
+		ui.Run();
+	}
 }
