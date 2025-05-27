@@ -9,7 +9,7 @@
 #include <D3DCompiler.h>
 #include <DirectXTex.h>
 #include <wincodec.h>
-#include <WICTextureLoader.h>
+
 #include <cassert>
 
 using namespace ND3D;
@@ -469,7 +469,9 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
     DirectX::TexMetadata texMetadata        = {};
     DirectX::ScratchImage scratchImage      = {};
 
-    HRESULT hr = DirectX::LoadFromWICFile(
+    HRESULT hr = CoInitialize(nullptr);
+
+    hr = DirectX::LoadFromWICFile(
         szFile,
         DirectX::WIC_FLAGS_NONE,
         &texMetadata,
@@ -479,7 +481,7 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
 
     if (SUCCEEDED(hr) != TRUE) { return FALSE; }
 
-    return SUCCEEDED(hr = DirectX::CreateShaderResourceView(
+    return SUCCEEDED(DirectX::CreateShaderResourceView(
         d3DContext.pD3DDevice,
         scratchImage.GetImage((size_t)0U, (size_t)0U, (size_t)0U),
         scratchImage.GetImageCount(),

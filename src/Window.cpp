@@ -179,6 +179,9 @@ void window::Loop()
 
 	//
 
+	ShowWindow(hWnd, SW_SHOWNORMAL);
+	UpdateWindow(hWnd);
+
 	MSG msg = {};
 
     BOOL state = FALSE;
