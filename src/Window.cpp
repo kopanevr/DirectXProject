@@ -92,8 +92,8 @@ BOOL window::CreateWindowInstance() noexcept
 
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		0,
-		0,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
 
 		nullptr,
 		nullptr,
@@ -158,8 +158,6 @@ window::~window()
 	ui.DeInit();
 
 	d3D.DeInit();
-
-	if (DestroyWindowInstance() == FALSE) {  }
 
 	if (UnregisterWindowClass() == FALSE) {  }
 

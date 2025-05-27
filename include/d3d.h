@@ -69,7 +69,7 @@ private:
     BOOL CreateTargetView();
     void DestroyTargetView();
 
-    void ClearTargetView();
+    
 
     IDXGIAdapter* GetAdapter(const UINT i)              const;
 
@@ -140,7 +140,7 @@ public:
 #endif
     BOOL Init(HWND hWnd);
     void DeInit();
-
+    void ClearTargetView();
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif

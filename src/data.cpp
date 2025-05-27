@@ -30,9 +30,9 @@ const char* Data::PrintTextureName() const
     switch (payload.texture)
 	{
 	case TEXTURES::TEXTURE_0:
-		return "Текстура 1";
+		return "Texture 1";
 	case TEXTURES::TEXTURE_1:
-		return "Текстура 2";
+		return "Texture 2";
 	default:
 		return nullptr;
 	}
