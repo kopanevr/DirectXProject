@@ -68,8 +68,8 @@ private:
 #endif
     BOOL CreateTargetView();
     void DestroyTargetView();
-
-    
+    void SetTargetView();
+    void ClearTargetView();
 
     IDXGIAdapter* GetAdapter(const UINT i)              const;
 
@@ -125,10 +125,6 @@ private:
     //
 
     void Draw();
-#if __cplusplus > 201703L
-    [[nodiscard]]
-#endif
-    BOOL Present();
 private:
     D3DContext d3DContext                               = {};
 public:
@@ -140,7 +136,7 @@ public:
 #endif
     BOOL Init(HWND hWnd);
     void DeInit();
-    void ClearTargetView();
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
@@ -151,6 +147,11 @@ public:
     D3DContext* GetD3DContext();
 
     void Render();
+
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL Present();
 public:
     Data data                                           = {};
 };

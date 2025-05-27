@@ -122,6 +122,30 @@ BOOL D3D::CreateTargetView()
 }
 
 /**
+ * @brief
+ */
+void D3D::DestroyTargetView()
+{
+    if (d3DContext.pRenderTargetView != nullptr)
+    {
+        d3DContext.pRenderTargetView->Release();
+
+        d3DContext.pRenderTargetView = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+void D3D::SetTargetView()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pRenderTargetView == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->OMSetRenderTargets((UINT)1U, &d3DContext.pRenderTargetView, nullptr);
+}
+
+/**
  * @brief Получить графический адаптер.
  */
 IDXGIAdapter* D3D::GetAdapter(const UINT i) const
@@ -141,19 +165,6 @@ IDXGIAdapter* D3D::GetAdapter(const UINT i) const
     pFactory->Release();
 
     return pAdapter;
-}
-
-/**
- * @brief
- */
-void D3D::DestroyTargetView()
-{
-    if (d3DContext.pRenderTargetView != nullptr)
-    {
-        d3DContext.pRenderTargetView->Release();
-
-        d3DContext.pRenderTargetView = nullptr;
-    }
 }
 
 /**
@@ -394,6 +405,30 @@ BOOL D3D::CreatePixelShader()
 /**
  * @brief
  */
+void D3D::DestroyPixelShader()
+{
+    if (d3DContext.pPixelShader != nullptr)
+    {
+        d3DContext.pPixelShader->Release();
+
+        d3DContext.pPixelShader = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+void D3D::SetPixelShader()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pPixelShader == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->PSSetShader(d3DContext.pPixelShader, nullptr, (UINT)0);
+}
+
+/**
+ * @brief
+ */
 BOOL D3D::CreateSamplerState()
 {
     D3D11_SAMPLER_DESC sd = {};
@@ -428,37 +463,12 @@ void D3D::DestroySamplerState()
 /**
  * @brief
  */
-void D3D::DestroyPixelShader()
-{
-    if (d3DContext.pPixelShader != nullptr)
-    {
-        d3DContext.pPixelShader->Release();
-
-        d3DContext.pPixelShader = nullptr;
-    }
-}
-
-/**
- * @brief
- */
 void D3D::SetSamplerState()
 {
     if (d3DContext.pD3DDeviceContext == nullptr) { return; }
     if (d3DContext.pSamplerState == nullptr) { return; }
 
     d3DContext.pD3DDeviceContext->PSSetSamplers((UINT)0U, (UINT)1U, &d3DContext.pSamplerState);
-}
-
-
-/**
- * @brief
- */
-void D3D::SetPixelShader()
-{
-    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
-    if (d3DContext.pPixelShader == nullptr) { return; }
-
-    d3DContext.pD3DDeviceContext->PSSetShader(d3DContext.pPixelShader, nullptr, (UINT)0);
 }
 
 /**
@@ -624,20 +634,15 @@ void D3D::Render()
 
     //
 
+    SetTargetView();
     SetInputLayout();
-
     SetVertexShader();
     SetPixelShader();
-
     SetVertexBuffer();
-
     SetSamplerState();
-
     SetShaderResourceView();
 
     //
 
     Draw();                                 						// Отрендерить.
-
-    if (Present() != TRUE) {  }     						    	// Переключить буферы.
 }

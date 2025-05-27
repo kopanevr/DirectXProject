@@ -211,8 +211,8 @@ void window::Loop()
 
 		ui.data.payload.fps = fpsCounter.GetFps();
 
-		d3D.data = ui.data;
-
 		ui.Run();
+
+		d3D.Present();
 	}
 }

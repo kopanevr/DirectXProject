@@ -3,7 +3,7 @@
 #include <cassert>
 #include <algorithm>
 
-#define MAX_FPS                                                             (  60.0  )
+#define MAX_FPS                                                             (  60    )
 
 #define DELAY_UPADATE_S                                                     (   1.0  )
 
@@ -39,7 +39,7 @@ void FPS_Counter::End() noexcept
     {
         fps = static_cast<uint8_t>(1.0 / duration.count());
 
-        fps = std::min<double>(fps, MAX_FPS);
+        fps = std::min<uint8_t>(fps, MAX_FPS);
 
         flagUpdate = true;
     }
