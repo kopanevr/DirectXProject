@@ -1,3 +1,8 @@
+ /**
+ * @file d3d.h
+ * @brief
+ */
+
 #pragma once
 
 #include <Windows.h>
@@ -5,9 +10,12 @@
 #include "ui.h"
 #include "d3d.h"
 
+#include "fps_counter.h"
+
+using namespace NUI;
 using namespace ND3D;
 
-class Window final
+class window final
 {
 private:
 	static LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);								// Оконная процедура.
@@ -40,10 +48,12 @@ private:
 	UI ui										= {};
 	D3D d3D										= {};
 
-	static Window* pThis;
+	static window* pThis;
+
+	FPS_Counter fpsCounter;
 public:
-	Window(LPCSTR lpClassName = (LPCSTR)"DefaultClassName", LPCSTR lpWindowName = (LPCSTR)"DefaultWindowName");
-	~Window();
+	window(LPCSTR lpClassName = (LPCSTR)"DefaultClassName", LPCSTR lpWindowName = (LPCSTR)"DefaultWindowName");
+	~window();
 
 	void Loop();
 };

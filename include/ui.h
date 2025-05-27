@@ -1,3 +1,8 @@
+ /**
+ * @file ui.h
+ * @brief
+ */
+
 #pragma once
 
 #include <Windows.h>
@@ -6,6 +11,12 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 
+#include "data.h"
+
+using namespace NDATA;
+
+namespace NUI
+{
 class UI final
 {
 private:
@@ -32,4 +43,7 @@ public:
 	LRESULT HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	void Run()																					const noexcept;
+public:
+	Data data																					= {};
 };
+}

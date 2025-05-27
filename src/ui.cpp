@@ -1,5 +1,8 @@
 #include "ui.h"
 
+using namespace NUI;
+using namespace NDATA;
+
 /**
  * @brief
  */
@@ -16,11 +19,10 @@ void UI::Body() const noexcept
 	//
 
 	if (ImGui::CollapsingHeader("General") == true)
-	{
-		//
-	}
+	{}
 
-	ImGui::Text("");
+	ImGui::Text("FPS:		%d", data.payload.fps);
+	ImGui::Text("TEXTURE:	%s", data.PrintTextureName());
 
 	//
 
@@ -81,6 +83,7 @@ void UI::DeInit() noexcept
 LRESULT UI::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 
 	return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 }

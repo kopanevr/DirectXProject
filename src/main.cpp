@@ -3,11 +3,11 @@
 #include <Windows.h>
 
 #include "Window.h"
-#include "D3D.h" 
+#include "D3D.h"
 
 int main(int argc, char* argv[])
 {
-	Window wnd;
+	window wnd = {};
 
 	wnd.Loop();
 

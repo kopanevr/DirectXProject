@@ -1,13 +1,11 @@
-#include "Window.h"
+#include "window.h"
 
 #include <assert.h>
-
-//
 
 /**
  * @brief
  */
-LRESULT CALLBACK Window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const LRESULT rs = pThis->ui.HandleMessage(hWnd, uMsg, wParam, lParam);
 
@@ -33,7 +31,7 @@ LRESULT CALLBACK Window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 /**
  * @brief Зарегестрировать класс окна.
  */
-BOOL Window::RegisterWindowClass() noexcept
+BOOL window::RegisterWindowClass() noexcept
 {
 	if (lpClassName == nullptr) { return FALSE; }
 
@@ -58,7 +56,7 @@ BOOL Window::RegisterWindowClass() noexcept
 	return TRUE;
 }
 
-BOOL Window::UnregisterWindowClass() const noexcept
+BOOL window::UnregisterWindowClass() const noexcept
 {
 	assert(lpClassName != nullptr);
 	assert(hInstance != nullptr);
@@ -80,7 +78,7 @@ BOOL Window::UnregisterWindowClass() const noexcept
 /**
  * @brief Создать класс окна.
  */
-BOOL Window::CreateWindowInstance() noexcept
+BOOL window::CreateWindowInstance() noexcept
 {
 	assert(lpClassName != nullptr);
 	assert(lpWindowName != nullptr);
@@ -113,7 +111,7 @@ BOOL Window::CreateWindowInstance() noexcept
 /**
  * @brief
  */
-BOOL Window::DestroyWindowInstance() const noexcept
+BOOL window::DestroyWindowInstance() const noexcept
 {
 	if (hWnd == nullptr) { return FALSE; }
 
@@ -128,18 +126,20 @@ BOOL Window::DestroyWindowInstance() const noexcept
 #endif
 }
 
-Window* Window::pThis = nullptr;
+window* window::pThis = nullptr;
 
 //
 
 /**
  * @brief
  */
-Window::Window(LPCSTR lpClassName, LPCSTR lpWindowName)
+window::window(LPCSTR lpClassName, LPCSTR lpWindowName)
 	:	lpClassName(lpClassName),
 		lpWindowName(lpWindowName)
 {
 	pThis = this;
+
+	//
 
 	if (RegisterWindowClass() == FALSE) { startUpFlag = FALSE; return; }
 
@@ -153,7 +153,7 @@ Window::Window(LPCSTR lpClassName, LPCSTR lpWindowName)
 /**
  * @brief
  */
-Window::~Window()
+window::~window()
 {
 	ui.DeInit();
 
@@ -173,7 +173,7 @@ Window::~Window()
 /**
  * @brief
  */
-void Window::Loop()
+void window::Loop()
 {
 	if (startUpFlag == FALSE) { return; }
 
@@ -198,11 +198,19 @@ void Window::Loop()
 
 		if (state == TRUE) { break; }
 
+		fpsCounter.Start();
+
 		//
 
 		d3D.Render();
 
 		//
+
+		fpsCounter.End();
+
+		ui.data.payload.fps = fpsCounter.GetFps();
+
+		d3D.data = ui.data;
 
 		ui.Run();
 	}

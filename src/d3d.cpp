@@ -9,7 +9,7 @@
 #include <D3DCompiler.h>
 #include <DirectXTex.h>
 #include <wincodec.h>
-
+#include <WICTextureLoader.h>
 #include <cassert>
 
 using namespace ND3D;
@@ -563,8 +563,14 @@ BOOL D3D::Init(HWND hWnd)
 
     //
 
-    if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { DeInit(); return FALSE; }
-
+    if (data.payload.texture == TEXTURES::TEXTURE_0)
+    {
+        if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { DeInit(); return FALSE; }
+    }
+    else
+    {
+        if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { DeInit(); return FALSE; }
+    }
 
     return TRUE;
 }
@@ -574,16 +580,25 @@ BOOL D3D::Init(HWND hWnd)
  */
 void D3D::DeInit()
 {
-    DestroyPixelShader();
-    DestroyVertexShader();
-
     DestroyShaderResourceView();
+
+    //
+
+    DestroyPixelShader();
+
+    //
 
     DestroySamplerState();
 
     DestroyVertexBuffer();
 
     DestroyInputLayout();
+
+    //
+
+    DestroyVertexShader();
+
+    //
 
     DestroyTargetView();
 
@@ -615,6 +630,7 @@ void D3D::Render()
     SetVertexBuffer();
 
     SetSamplerState();
+
     SetShaderResourceView();
 
     //

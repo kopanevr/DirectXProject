@@ -8,6 +8,10 @@
 #include <d3d11.h>
 #include <dxgi.h>
 
+#include "data.h"
+
+using namespace NDATA;
+
 namespace ND3D
 {
 struct Vertex
@@ -147,5 +151,7 @@ public:
     D3DContext* GetD3DContext();
 
     void Render();
+public:
+    Data data                                           = {};
 };
 }
