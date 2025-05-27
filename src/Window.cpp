@@ -18,7 +18,7 @@ LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		return (LRESULT)0;
 	case WM_SIZE:
-		if (pThis->d3D.SetViewport(hWnd) == TRUE) { break; };
+		pThis->d3D.SetViewport(hWnd);
 
 		return (LRESULT)0;
 	default:
@@ -182,37 +182,30 @@ void window::Loop()
 
 	MSG msg = {};
 
-    BOOL state = FALSE;
-
-	while (state == FALSE)
+	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessageA(&msg, nullptr, (UINT)0U, (UINT)0U, PM_REMOVE) == TRUE)
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-
-			if (msg.message == WM_QUIT)
-			{
-				state = TRUE;
-			}
 		}
+		else
+		{
+			fpsCounter.Start();
 
-		if (state == TRUE) { break; }
+			//
 
-		fpsCounter.Start();
+			d3D.Render();
 
-		//
+			//
 
-		d3D.Render();
+			fpsCounter.End();
 
-		//
+			ui.data.payload.fps = fpsCounter.GetFps();
 
-		fpsCounter.End();
+			ui.Run();
 
-		ui.data.payload.fps = fpsCounter.GetFps();
-
-		ui.Run();
-
-		d3D.Present();
+			d3D.Present();
+		}
 	}
 }

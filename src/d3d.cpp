@@ -183,15 +183,15 @@ void D3D::ClearTargetView()
 /**
  * @brief
  */
-BOOL D3D::SetViewport(HWND hWnd) const
+void D3D::SetViewport(HWND hWnd) const
 {
     assert(hWnd != nullptr);
 
-    if (hWnd == nullptr) { return FALSE; }
+    if (hWnd == nullptr) { return; }
 
     RECT rect = {};
 
-    if (GetWindowRect(hWnd, &rect) != TRUE) { return FALSE; };
+    if (GetWindowRect(hWnd, &rect) != TRUE) { return; };
 
     D3D11_VIEWPORT viewport = {};
 
@@ -205,11 +205,9 @@ BOOL D3D::SetViewport(HWND hWnd) const
     viewport.MinDepth   = (FLOAT)0.0f;
     viewport.MaxDepth   = (FLOAT)1.0f;
 
-    if (d3DContext.pD3DDeviceContext == nullptr) { return FALSE; }
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
 
     d3DContext.pD3DDeviceContext->RSSetViewports((UINT)1U, &viewport);
-
-    return TRUE;
 }
 
 /**
@@ -397,9 +395,7 @@ BOOL D3D::CreatePixelShader()
 
     if (d3DContext.pPixelCode == nullptr) { return FALSE; }
 
-    HRESULT hr = d3DContext.pD3DDevice->CreatePixelShader((const void*)d3DContext.pPixelCode->GetBufferPointer(), (SIZE_T)d3DContext.pPixelCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader);
-
-    return SUCCEEDED(hr);
+    return SUCCEEDED(d3DContext.pD3DDevice->CreatePixelShader((const void*)d3DContext.pPixelCode->GetBufferPointer(), (SIZE_T)d3DContext.pPixelCode->GetBufferSize(), nullptr, &d3DContext.pPixelShader));
 }
 
 /**
@@ -498,6 +494,8 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
         texMetadata,
         &d3DContext.pShaderResourceView
     ));
+
+    scratchImage.Release();
 }
 
 /**
@@ -555,7 +553,7 @@ BOOL D3D::Init(HWND hWnd)
 
     if (CreateTargetView() != TRUE) { DeInit(); return FALSE; }
 
-    if (SetViewport(hWnd) != TRUE) { DeInit(); return FALSE; }
+    SetViewport(hWnd);
 
     //
 
@@ -564,6 +562,8 @@ BOOL D3D::Init(HWND hWnd)
     //
 
     if (CreateInputLayout() != TRUE) { DeInit(); return FALSE; }
+
+    SetInputLayout();
 
     if (CreateVertexBuffer() != TRUE) { DeInit(); return FALSE; }
 
@@ -635,7 +635,6 @@ void D3D::Render()
     //
 
     SetTargetView();
-    SetInputLayout();
     SetVertexShader();
     SetPixelShader();
     SetVertexBuffer();

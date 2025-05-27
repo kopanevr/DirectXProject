@@ -137,10 +137,7 @@ public:
     BOOL Init(HWND hWnd);
     void DeInit();
 
-#if __cplusplus > 201703L
-    [[nodiscard]]
-#endif
-    BOOL SetViewport(HWND hWnd)                         const;
+    void SetViewport(HWND hWnd)                         const;
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
