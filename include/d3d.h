@@ -63,11 +63,6 @@ private:
     D3D(const D3D&)                                     = delete;
     D3D& operator=(const D3D&)                          = delete;
 
-#if __cplusplus > 201703L
-    [[nodiscard]]
-#endif
-    BOOL CreateTargetView();
-    void DestroyTargetView();
     void SetTargetView();
     void ClearTargetView();
 
@@ -122,6 +117,8 @@ private:
     void DestroyShaderResourceView();
     void SetShaderResourceView();
 
+    void SetPrimitiveTopoligy();
+
     //
 
     void Draw();
@@ -130,6 +127,18 @@ private:
 public:
     D3D()                                               = default;
     ~D3D()                                              = default;
+
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL ResizeSwapChaninBuffers(HWND hWnd);
+
+#if __cplusplus > 201703L
+    [[nodiscard]]
+#endif
+    BOOL CreateTargetView();
+
+    void DestroyTargetView();
 
 #if __cplusplus > 201703L
     [[nodiscard]]

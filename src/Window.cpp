@@ -18,6 +18,12 @@ LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		return (LRESULT)0;
 	case WM_SIZE:
+		pThis->d3D.DestroyTargetView();
+
+		if (pThis->d3D.ResizeSwapChaninBuffers(hWnd) == TRUE) {  }
+
+		if (pThis->d3D.CreateTargetView() == TRUE) {  }
+
 		pThis->d3D.SetViewport(hWnd);
 
 		return (LRESULT)0;
@@ -182,8 +188,12 @@ void window::Loop()
 
 	MSG msg = {};
 
+	RECT rect = {};
+
 	while (msg.message != WM_QUIT)
 	{
+		fpsCounter.Start();
+
 		if (PeekMessageA(&msg, nullptr, (UINT)0U, (UINT)0U, PM_REMOVE) == TRUE)
 		{
 			TranslateMessage(&msg);
@@ -191,19 +201,29 @@ void window::Loop()
 		}
 		else
 		{
-			fpsCounter.Start();
-
-			//
-
 			d3D.Render();
-
-			//
 
 			fpsCounter.End();
 
-			ui.data.payload.fps = fpsCounter.GetFps();
+			ui.data.payload.fps		= fpsCounter.GetFps();
+
+			if (GetWindowRect(hWnd, &rect) != TRUE) {};
+
+			LONG width = rect.right - rect.left;
+			LONG height = rect.bottom - rect.top;
+
+			ui.data.payload.width	= (uint16_t)width;
+			ui.data.payload.height	= (uint16_t)height;
+
+			ui.data.IsChangedFlag	= true;
+
+			//
 
 			ui.Run();
+			d3D.data				= ui.data;
+			ui.data.IsChangedFlag	= false;
+
+			//
 
 			d3D.Present();
 		}

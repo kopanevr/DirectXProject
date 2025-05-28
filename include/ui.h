@@ -20,7 +20,7 @@ namespace NUI
 class UI final
 {
 private:
-	void Body()																					const noexcept;
+	void Body()																					noexcept;
 
 	UI(const UI&)																					= delete;
 	UI& operator=(const UI&)																			= delete;
@@ -42,7 +42,7 @@ public:
 #endif
 	LRESULT HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	void Run()																					const noexcept;
+	void Run()																					noexcept;
 public:
 	Data data																					= {};
 };

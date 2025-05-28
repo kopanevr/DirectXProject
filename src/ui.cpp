@@ -6,7 +6,7 @@ using namespace NDATA;
 /**
  * @brief
  */
-void UI::Body() const noexcept
+void UI::Body() noexcept
 {
 	ImGui::Begin(
 		"1",
@@ -19,10 +19,14 @@ void UI::Body() const noexcept
 	//
 
 	if (ImGui::CollapsingHeader("General") == true)
-	{}
+	{
+		data.IsChangedFlag = true;
+	}
 
-	ImGui::Text("FPS:		%d", data.payload.fps);
-	ImGui::Text("TEXTURE:	%s", data.PrintTextureName());
+	ImGui::Text("FPS:      %d", data.payload.fps);
+	ImGui::Text("TEXTURE:  %s", data.PrintTextureName());
+	ImGui::Text("WIDTH:    %d", data.payload.width);
+	ImGui::Text("HEIGHT:   %d", data.payload.height);
 
 	//
 
@@ -90,7 +94,7 @@ LRESULT UI::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /**
  * @brief
  */
-void UI::Run() const noexcept
+void UI::Run() noexcept
 {
 	Setup();
 

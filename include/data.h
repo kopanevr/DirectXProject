@@ -23,9 +23,12 @@ struct Payload final
 {
     uint8_t fps                         = 0U;
 
+	uint16_t width						= 0U;
+	uint16_t height						= 0U;
+
 	//
 
-	TEXTURES texture                    = TEXTURES::TEXTURE_0;
+	TEXTURES texture                    = TEXTURES::TEXTURE_1;
 
 	Payload();
     Payload(const Payload&);
@@ -51,5 +54,7 @@ public:
     ~Data()                             = default;
 
     Data(const Data&);
+public:
+	bool IsChangedFlag					= false;
 };
 }

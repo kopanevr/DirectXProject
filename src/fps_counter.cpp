@@ -3,20 +3,18 @@
 #include <cassert>
 #include <algorithm>
 
-#define MAX_FPS                                                             (  60    )
+#define MAX_FPS                                                             ( 480    )
 
-#define DELAY_UPADATE_S                                                     (   1.0  )
+#define DELAY_UPADATE_S                                                     (   0.5  )
 
 /**
  * @brief
  */
 void FPS_Counter::Start() noexcept
 {
-    startTime = std::chrono::high_resolution_clock::now();
-
     if (flagUpdate == true)
     {
-        startUpdateTime = startTime;
+        startTime = std::chrono::high_resolution_clock::now();
 
         flagUpdate = false;
     }
@@ -27,21 +25,24 @@ void FPS_Counter::Start() noexcept
  */
 void FPS_Counter::End() noexcept
 {
+    frameCount++;
+
     endTime = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration = endTime - startTime;
-    std::chrono::duration<double> durationUpdate = endTime - startUpdateTime;
 
-    static_assert(MAX_FPS > 0.0);
+    static_assert(MAX_FPS > 0);
     static_assert(DELAY_UPADATE_S > 0.0);
 
-    if (durationUpdate.count() >= DELAY_UPADATE_S)
+    if (duration.count() >= DELAY_UPADATE_S)
     {
-        fps = static_cast<uint8_t>(1.0 / duration.count());
+        fps = static_cast<uint16_t>(frameCount / duration.count());
 
-        fps = std::min<uint8_t>(fps, MAX_FPS);
+        fps = std::min<uint16_t>(fps, MAX_FPS);
 
         flagUpdate = true;
+
+        frameCount = 0U;
     }
 }
 

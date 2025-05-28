@@ -5,6 +5,8 @@
 
 #include "d3d.h"
 
+#include <iostream>
+
 #include <Windows.h>
 #include <D3DCompiler.h>
 #include <DirectXTex.h>
@@ -49,11 +51,21 @@ BOOL D3D::CreateDeviceAndSwapChain(HWND hWnd)
         D3D_FEATURE_LEVEL_11_0
     };
 
+    //
+
+    UINT createDeviceFlags = (UINT)0U;
+
+#ifndef NDEBUG
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+    //
+
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
         pAdapter,                                                                       // Графический адаптер.
         D3D_DRIVER_TYPE_UNKNOWN,                                                        // Тип драйвера.
         nullptr,                                                                        // Программный драйвер.
-        (UINT)0U,                                                                       // Флаги.
+        createDeviceFlags,                                                              // Флаги.
         featureLevels,
         (UINT)ARRAYSIZE(featureLevels),
         D3D11_SDK_VERSION,                                                              // Версия SDK.
@@ -104,45 +116,25 @@ void D3D::DestroyDeviceAndSwapChain()
 /**
  * @brief
  */
-BOOL D3D::CreateTargetView()
-{
-    ID3D11Texture2D* pBackBuffer = nullptr;
-
-    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
-
-    HRESULT hr = d3DContext.pSwapChain->GetBuffer((UINT)0U, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
-
-    if (FAILED(hr) == TRUE) { return FALSE; }
-
-    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pBackBuffer, nullptr, &d3DContext.pRenderTargetView);
-
-    pBackBuffer->Release();
-
-    return SUCCEEDED(hr);
-}
-
-/**
- * @brief
- */
-void D3D::DestroyTargetView()
-{
-    if (d3DContext.pRenderTargetView != nullptr)
-    {
-        d3DContext.pRenderTargetView->Release();
-
-        d3DContext.pRenderTargetView = nullptr;
-    }
-}
-
-/**
- * @brief
- */
 void D3D::SetTargetView()
 {
     if (d3DContext.pD3DDeviceContext == nullptr) { return; }
     if (d3DContext.pRenderTargetView == nullptr) { return; }
 
     d3DContext.pD3DDeviceContext->OMSetRenderTargets((UINT)1U, &d3DContext.pRenderTargetView, nullptr);
+}
+
+/**
+ * @brief
+ */
+void D3D::ClearTargetView()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+    if (d3DContext.pRenderTargetView == nullptr) { return; }
+
+    const FLOAT сolorRGBA[4] = { (FLOAT)0.2f, (FLOAT)0.298f, (FLOAT)0.29f, (FLOAT)1.0f };
+
+    d3DContext.pD3DDeviceContext->ClearRenderTargetView(d3DContext.pRenderTargetView, сolorRGBA);
 }
 
 /**
@@ -164,20 +156,23 @@ IDXGIAdapter* D3D::GetAdapter(const UINT i) const
 
     pFactory->Release();
 
+    //
+
+    DXGI_ADAPTER_DESC dsc = {};
+
+    hr = pAdapter->GetDesc(&dsc);
+
+    assert(SUCCEEDED(hr) == true);
+
+    if (FAILED(hr) == true) {  }
+
+    std::cout << "Adapter:          " << i << std::endl;
+    std::cout << "Id:               0x" << reinterpret_cast<const void*>(dsc.DeviceId) << std::endl;
+    std::wcout << "Description:      " << dsc.Description << std::endl;
+
+    //
+
     return pAdapter;
-}
-
-/**
- * @brief
- */
-void D3D::ClearTargetView()
-{
-    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
-    if (d3DContext.pRenderTargetView == nullptr) { return; }
-
-    const FLOAT сolorRGBA[4] = {(FLOAT)0.2f, (FLOAT)0.298f, (FLOAT)0.29f, (FLOAT)1.0f};
-
-    d3DContext.pD3DDeviceContext->ClearRenderTargetView(d3DContext.pRenderTargetView, сolorRGBA);
 }
 
 /**
@@ -231,7 +226,7 @@ BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR p
 
     //
 
-    if (pErrorMsgs != nullptr) { pErrorMsgs->Release(); }
+    if (pErrorMsgs != nullptr) { pErrorMsgs->Release(); return FALSE; }
 
     assert(SUCCEEDED(hr) == TRUE);
 
@@ -334,7 +329,7 @@ BOOL D3D::CreateInputLayout()
         {
             (LPCSTR)"POSITION",
             (UINT)0U,									// Индекс семантики.
-            DXGI_FORMAT_R8G8B8A8_UNORM,
+            DXGI_FORMAT_R32G32B32_FLOAT,
             (UINT)0U,									// Индекс слота.
             (UINT)0U,									// Смещение в байтах.
             D3D11_INPUT_PER_VERTEX_DATA,
@@ -343,7 +338,7 @@ BOOL D3D::CreateInputLayout()
         {
             (LPCSTR)"TEXCOORD",
             (UINT)0U,									// Индекс семантики.
-            DXGI_FORMAT_R8G8B8A8_UNORM,
+            DXGI_FORMAT_R32G32_FLOAT,
             (UINT)0U,									// Индекс слота.
             (UINT)12U,									// Смещение в байтах.
             D3D11_INPUT_PER_VERTEX_DATA,
@@ -351,11 +346,9 @@ BOOL D3D::CreateInputLayout()
         }
     };
 
-    UINT numElements = (UINT)ARRAYSIZE(ied);
-
     return SUCCEEDED(d3DContext.pD3DDevice->CreateInputLayout(
         ied,
-        numElements,
+        (UINT)ARRAYSIZE(ied),
         (const void*)d3DContext.pVertexCode->GetBufferPointer(),
         (SIZE_T)d3DContext.pVertexCode->GetBufferSize(),
         &d3DContext.pInputLayout
@@ -494,8 +487,6 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
         texMetadata,
         &d3DContext.pShaderResourceView
     ));
-
-    scratchImage.Release();
 }
 
 /**
@@ -523,6 +514,16 @@ void D3D::SetShaderResourceView()
 }
 
 /**
+ * @brief
+ */
+void D3D::SetPrimitiveTopoligy()
+{
+    if (d3DContext.pD3DDeviceContext == nullptr) { return; }
+
+    d3DContext.pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+/**
  * @brief Отрендерить.
  */
 void D3D::Draw()
@@ -543,6 +544,66 @@ BOOL D3D::Present()
 }
 
 //
+
+/**
+ * @brief
+ */
+BOOL D3D::CreateTargetView()
+{
+    ID3D11Texture2D* pBackBuffer = nullptr;
+
+    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+
+    HRESULT hr = d3DContext.pSwapChain->GetBuffer((UINT)0U, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
+
+    if (FAILED(hr) == TRUE) { return FALSE; }
+
+    hr = d3DContext.pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pBackBuffer, nullptr, &d3DContext.pRenderTargetView);
+
+    pBackBuffer->Release();
+
+    return SUCCEEDED(hr);
+}
+
+/**
+ * @brief
+ */
+void D3D::DestroyTargetView()
+{
+    if (d3DContext.pRenderTargetView != nullptr)
+    {
+        d3DContext.pRenderTargetView->Release();
+
+        d3DContext.pRenderTargetView = nullptr;
+    }
+}
+
+/**
+ * @brief
+ */
+BOOL D3D::ResizeSwapChaninBuffers(HWND hWnd)
+{
+    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+
+    assert(hWnd != nullptr);
+
+    if (hWnd == nullptr) { return FALSE; }
+
+    RECT rect = {};
+
+    if (GetWindowRect(hWnd, &rect) != TRUE) { return FALSE; };
+
+    LONG width = rect.right - rect.left;
+    LONG height = rect.bottom - rect.top;
+
+    return SUCCEEDED(d3DContext.pSwapChain->ResizeBuffers(
+        (UINT)0U,
+        (UINT)width,
+        (UINT)height,
+        DXGI_FORMAT_UNKNOWN,
+        (UINT)0U
+    ));
+}
 
 /**
  * @brief
@@ -640,6 +701,7 @@ void D3D::Render()
     SetVertexBuffer();
     SetSamplerState();
     SetShaderResourceView();
+    SetPrimitiveTopoligy();
 
     //
 

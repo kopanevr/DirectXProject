@@ -14,14 +14,13 @@ private:
     FPS_Counter(const FPS_Counter&)                                 = delete;
     FPS_Counter& operator=(const FPS_Counter&)                      = delete;
 private:
-    uint8_t fps                                                     = 0U;
+    uint16_t fps                                                    = 0U;
 
     std::chrono::high_resolution_clock::time_point startTime;
     std::chrono::high_resolution_clock::time_point endTime;
 
-    std::chrono::high_resolution_clock::time_point startUpdateTime;
-
     bool flagUpdate                                                 = true;
+    uint16_t frameCount                                             = 0U;
 public:
     FPS_Counter()                                                   = default;
     ~FPS_Counter()                                                  = default;

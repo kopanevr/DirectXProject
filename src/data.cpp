@@ -11,15 +11,18 @@ Payload::Payload()
 /**
  * @brief
  */
-Payload::Payload(const Payload&)
-{}
+Payload::Payload(const Payload& other)
+{
+	fps			= other.fps;
+	texture		= other.texture;
+}
 
 /**
  * @brief
  */
 bool Data::IsChanged() const
 {
-	return true;
+	return IsChangedFlag;
 }
 
 /**
