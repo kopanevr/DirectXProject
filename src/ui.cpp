@@ -18,15 +18,39 @@ void UI::Body() noexcept
 
 	//
 
+	static bool flag_0 = true;
+	static bool flag_1 = false;
+
 	if (ImGui::CollapsingHeader("General") == true)
 	{
-		data.IsChangedFlag = true;
+		ImGui::Checkbox("TEXTURE 1", &flag_0);
+		ImGui::Checkbox("TEXTURE 2", &flag_1);
 	}
 
-	ImGui::Text("FPS:      %d", data.payload.fps);
-	ImGui::Text("TEXTURE:  %s", data.PrintTextureName());
-	ImGui::Text("WIDTH:    %d", data.payload.width);
-	ImGui::Text("HEIGHT:   %d", data.payload.height);
+	flags.b_0 = flag_0;
+	flags.b_1 = flag_1;
+
+	if (flags.b_2 != flags.b_0 || flags.b_3 != flags.b_1)
+	{
+		if (flags.b_0 == 1 && flags.b_1 != 1)
+		{
+			d->payload.texture	= TEXTURES::TEXTURE_0;
+		}
+		
+		if (flags.b_0 != 1 && flags.b_1 == 1)
+		{
+			d->payload.texture	= TEXTURES::TEXTURE_1;
+		}
+
+		flags.b_2 = flags.b_0;
+		flags.b_3 = flags.b_1;
+	}
+
+	ImGui::Text("FPS:      %d", d->payload.fps);
+	ImGui::Text("TEXTURE:  %s", d->PrintTextureName());
+	ImGui::Text("WINDOW:");
+	ImGui::Text("WIDTH:    %d", d->payload.width);
+	ImGui::Text("HEIGHT:   %d", d->payload.height);
 
 	//
 
@@ -79,6 +103,8 @@ void UI::DeInit() noexcept
 	ImGui_ImplDX11_Shutdown();
 
 	ImGui::DestroyContext();
+
+	d = nullptr;
 }
 
 /**

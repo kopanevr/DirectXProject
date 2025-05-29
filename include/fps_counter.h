@@ -19,7 +19,7 @@ private:
     std::chrono::high_resolution_clock::time_point startTime;
     std::chrono::high_resolution_clock::time_point endTime;
 
-    bool flagUpdate                                                 = true;
+    bool flagUpdate                                                 = false;
     uint16_t frameCount                                             = 0U;
 public:
     FPS_Counter()                                                   = default;

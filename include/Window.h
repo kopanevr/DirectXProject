@@ -14,8 +14,9 @@
 
 using namespace NUI;
 using namespace ND3D;
+using namespace NDATA;
 
-class window final
+class Window final
 {
 private:
 	static LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);								// Оконная процедура.
@@ -48,12 +49,14 @@ private:
 	UI ui										= {};
 	D3D d3D										= {};
 
-	static window* pThis;
+	static Window* pThis;
 
 	FPS_Counter fpsCounter;
+
+	Data* d										= &data;
 public:
-	window(LPCSTR lpClassName = (LPCSTR)"DefaultClassName", LPCSTR lpWindowName = (LPCSTR)"DefaultWindowName");
-	~window();
+	Window(LPCSTR lpClassName = (LPCSTR)"DefaultClassName", LPCSTR lpWindowName = (LPCSTR)"DefaultWindowName");
+	~Window();
 
 	void Loop();
 };

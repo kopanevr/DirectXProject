@@ -5,29 +5,6 @@ using namespace NDATA;
 /**
  * @brief
  */
-Payload::Payload()
-{}
-
-/**
- * @brief
- */
-Payload::Payload(const Payload& other)
-{
-	fps			= other.fps;
-	texture		= other.texture;
-}
-
-/**
- * @brief
- */
-bool Data::IsChanged() const
-{
-	return IsChangedFlag;
-}
-
-/**
- * @brief
- */
 const char* Data::PrintTextureName() const
 {
     switch (payload.texture)
@@ -39,12 +16,4 @@ const char* Data::PrintTextureName() const
 	default:
 		return nullptr;
 	}
-}
-
-/**
- * @brief
- */
-Data::Data(const Data& other)
-{
-    if (other.IsChanged() == true) { payload = other.payload; }
 }

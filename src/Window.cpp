@@ -5,11 +5,13 @@
 /**
  * @brief
  */
-LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const LRESULT rs = pThis->ui.HandleMessage(hWnd, uMsg, wParam, lParam);
 
 	if (rs != (LRESULT)0) { return rs; }
+
+	RECT rect = {};
 
 	switch (uMsg)
 	{
@@ -18,6 +20,13 @@ LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		return (LRESULT)0;
 	case WM_SIZE:
+		if (GetWindowRect(hWnd, &rect) != TRUE) {  };
+
+		pThis->d->payload.width		= (uint16_t)(rect.right - rect.left);
+		pThis->d->payload.height	= (uint16_t)(rect.bottom - rect.top);
+
+		//
+
 		pThis->d3D.DestroyTargetView();
 
 		if (pThis->d3D.ResizeSwapChaninBuffers(hWnd) == TRUE) {  }
@@ -37,7 +46,7 @@ LRESULT CALLBACK window::WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 /**
  * @brief Зарегестрировать класс окна.
  */
-BOOL window::RegisterWindowClass() noexcept
+BOOL Window::RegisterWindowClass() noexcept
 {
 	if (lpClassName == nullptr) { return FALSE; }
 
@@ -62,7 +71,7 @@ BOOL window::RegisterWindowClass() noexcept
 	return TRUE;
 }
 
-BOOL window::UnregisterWindowClass() const noexcept
+BOOL Window::UnregisterWindowClass() const noexcept
 {
 	assert(lpClassName != nullptr);
 	assert(hInstance != nullptr);
@@ -84,7 +93,7 @@ BOOL window::UnregisterWindowClass() const noexcept
 /**
  * @brief Создать класс окна.
  */
-BOOL window::CreateWindowInstance() noexcept
+BOOL Window::CreateWindowInstance() noexcept
 {
 	assert(lpClassName != nullptr);
 	assert(lpWindowName != nullptr);
@@ -117,7 +126,7 @@ BOOL window::CreateWindowInstance() noexcept
 /**
  * @brief
  */
-BOOL window::DestroyWindowInstance() const noexcept
+BOOL Window::DestroyWindowInstance() const noexcept
 {
 	if (hWnd == nullptr) { return FALSE; }
 
@@ -132,14 +141,14 @@ BOOL window::DestroyWindowInstance() const noexcept
 #endif
 }
 
-window* window::pThis = nullptr;
+Window* Window::pThis = nullptr;
 
 //
 
 /**
  * @brief
  */
-window::window(LPCSTR lpClassName, LPCSTR lpWindowName)
+Window::Window(LPCSTR lpClassName, LPCSTR lpWindowName)
 	:	lpClassName(lpClassName),
 		lpWindowName(lpWindowName)
 {
@@ -159,7 +168,7 @@ window::window(LPCSTR lpClassName, LPCSTR lpWindowName)
 /**
  * @brief
  */
-window::~window()
+Window::~Window()
 {
 	ui.DeInit();
 
@@ -177,7 +186,7 @@ window::~window()
 /**
  * @brief
  */
-void window::Loop()
+void Window::Loop()
 {
 	if (startUpFlag == FALSE) { return; }
 
@@ -187,8 +196,6 @@ void window::Loop()
 	UpdateWindow(hWnd);
 
 	MSG msg = {};
-
-	RECT rect = {};
 
 	while (msg.message != WM_QUIT)
 	{
@@ -201,31 +208,16 @@ void window::Loop()
 		}
 		else
 		{
+			d->payload.fps = fpsCounter.GetFps();
+
+			//
+
 			d3D.Render();
-
-			fpsCounter.End();
-
-			ui.data.payload.fps		= fpsCounter.GetFps();
-
-			if (GetWindowRect(hWnd, &rect) != TRUE) {};
-
-			LONG width = rect.right - rect.left;
-			LONG height = rect.bottom - rect.top;
-
-			ui.data.payload.width	= (uint16_t)width;
-			ui.data.payload.height	= (uint16_t)height;
-
-			ui.data.IsChangedFlag	= true;
-
-			//
-
-			ui.Run();
-			d3D.data				= ui.data;
-			ui.data.IsChangedFlag	= false;
-
-			//
+			ui.Run();												// Отрисовка графического интерфейса.
 
 			d3D.Present();
 		}
+
+		fpsCounter.End();
 	}
 }

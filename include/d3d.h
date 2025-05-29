@@ -159,6 +159,6 @@ public:
 #endif
     BOOL Present();
 public:
-    Data data                                           = {};
+    Data* d                                             = &data;
 };
 }

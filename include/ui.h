@@ -27,6 +27,19 @@ private:
 
 	void Setup()																					const noexcept;
 	void Render()																					const noexcept;
+private:
+	struct
+	{
+		bool b_0	: 1;
+		bool b_1	: 1;
+		bool b_2	: 1;
+		bool b_3	: 1;
+
+		bool		: 4;
+	}
+	flags = {		  0,
+				  0	
+	};
 public:
 	UI()																						= default;
 	~UI()																						= default;
@@ -44,6 +57,6 @@ public:
 
 	void Run()																					noexcept;
 public:
-	Data data																					= {};
+	Data* d																						= &data;
 };
 }

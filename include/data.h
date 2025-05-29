@@ -21,17 +21,14 @@ enum class TEXTURES	: uint8_t
 
 struct Payload final
 {
-    uint8_t fps                         = 0U;
+    uint8_t fps                         	= 0U;
 
-	uint16_t width						= 0U;
-	uint16_t height						= 0U;
+	uint16_t width				= 0U;
+	uint16_t height				= 0U;
 
 	//
 
-	TEXTURES texture                    = TEXTURES::TEXTURE_1;
-
-	Payload();
-    Payload(const Payload&);
+	TEXTURES texture			= TEXTURES::TEXTURE_0;
 };
 
 class Data final
@@ -44,17 +41,11 @@ public:
 #if __cplusplus > 201703L
 	[[nodiscard]]
 #endif
-    bool IsChanged()                    const;
-#if __cplusplus > 201703L
-	[[nodiscard]]
-#endif
-	const char* PrintTextureName()      const;
+	const char* PrintTextureName()		const;
 
-    Data()                              = default;
-    ~Data()                             = default;
-
-    Data(const Data&);
-public:
-	bool IsChangedFlag					= false;
+    Data()					= default;
+    ~Data()					= default;
 };
+
+static Data data = {};
 }

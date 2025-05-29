@@ -4,24 +4,41 @@
 
 ## ПРЕДИСЛОВИЕ
 
-Данный проект представляет собой пример реализации рендеринга текстуры на треугольнике с применением API DirectX.
+Данный проект представляет собой пример реализации рендеринга текстуры на треугольнике с применением [DirectX Api](https://www.microsoft.com/en-us/download/details.aspx?id=17431). Для отрисовки элементов графического интерфейса использовалась библиотека [Dear ImGui](https://github.com/ocornut/imgui).
 
 ## ОПИСАНИЕ
 
-Результат работы приложения представлен на изображении:
+Результат работы приложения представлен на изображениях:
+
+Пример 1
 
 |  |
 | :--: |
+| **Пример 1** |
 | ![1](/doc/images/1.PNG) |
+
+Пример 2
 
 |  |
 | :--: |
-| ![1](/doc/images/1.PNG) |
+| **Пример 2** |
+| ![2](/doc/images/2.PNG) |
+
+Координаты вершин треугольник имеет следующие:
+
+```cpp
+static Vertex vertices[] = {
+//                           u      v
+    { 0.0f,  0.5f,  0.0f,    0.5f,  0.0f },
+    { 0.5f, -0.5f,  0.0f,    1.0f,  1.0f },
+    {-0.5f, -0.5f,  0.0f,    0.0f,  1.0f }
+};
+```
 
 ## ЗАКЛЮЧЕНИЕ
 
 ## ССЫЛКИ
 
 * [Windows Api](https://learn.microsoft.com/en-us/windows/win32/api) - Windows API.
-* [DirectX](https://www.microsoft.com/en-us/download/details.aspx?id=17431) - DirectX.
-* [Dear ImGui](https://github.com/ocornut/imgui) - Библиотека для создания интерфейсов.
+* [DirectX Api](https://www.microsoft.com/en-us/download/details.aspx?id=17431) - DirectX API.
+* [Dear ImGui](https://github.com/ocornut/imgui) - Библиотека для создания графических интерфейсов.

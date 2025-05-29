@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[])
 {
-	window wnd = {};
+	Window wnd = {};
 
 	wnd.Loop();
 

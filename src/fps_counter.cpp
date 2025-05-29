@@ -5,7 +5,7 @@
 
 #define MAX_FPS                                                             ( 480    )
 
-#define DELAY_UPADATE_S                                                     (   0.5  )
+#define DELAY_UPADATE_S                                                     (   1.0  )
 
 /**
  * @brief

@@ -43,7 +43,7 @@ BOOL D3D::CreateDeviceAndSwapChain(HWND hWnd)
 
     sd.Windowed                             = TRUE;
 
-    IDXGIAdapter* pAdapter = GetAdapter(1U);
+    IDXGIAdapter* pAdapter = GetAdapter(0U);
 
     D3D_FEATURE_LEVEL featureLevel;
 
@@ -470,6 +470,10 @@ BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
 
     HRESULT hr = CoInitialize(nullptr);
 
+    assert(SUCCEEDED(hr) == TRUE);
+
+    if (SUCCEEDED(hr) != TRUE) { return FALSE; }
+
     hr = DirectX::LoadFromWICFile(
         szFile,
         DirectX::WIC_FLAGS_NONE,
@@ -636,15 +640,6 @@ BOOL D3D::Init(HWND hWnd)
 
     //
 
-    if (data.payload.texture == TEXTURES::TEXTURE_0)
-    {
-        if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { DeInit(); return FALSE; }
-    }
-    else
-    {
-        if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { DeInit(); return FALSE; }
-    }
-
     return TRUE;
 }
 
@@ -694,6 +689,41 @@ void D3D::Render()
     ClearTargetView();
 
     //
+
+    static bool flag = false;
+    static TEXTURES previesValueTexture = d->payload.texture;
+
+    if (flag == true)
+    {
+        if (previesValueTexture != d->payload.texture)
+        {
+            previesValueTexture = d->payload.texture;
+
+            if (d->payload.texture == TEXTURES::TEXTURE_0)
+            {
+                if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { return; }
+            }
+            else
+            {
+                if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { return; }
+            }
+        }
+    }
+    else
+    {
+        previesValueTexture = d->payload.texture;
+
+        if (d->payload.texture == TEXTURES::TEXTURE_0)
+        {
+            if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { return; }
+        }
+        else
+        {
+            if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { return; }
+        }
+
+        flag = true;
+    }
 
     SetTargetView();
     SetVertexShader();
