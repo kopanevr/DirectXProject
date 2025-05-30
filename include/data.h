@@ -32,6 +32,8 @@ struct Payload final
 
 	float x						= 0.0f;
 	float y						= 0.0f;
+
+	int a						= 0U;
 };
 
 class Data final

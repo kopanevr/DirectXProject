@@ -23,8 +23,11 @@ void UI::Body() noexcept
 
 	static float value_0			= 0.0f;
 	static float value_1			= 0.0f;
-	static float valuePrevious_0	= value_0;
-	static float valuePrevious_1	= value_1;
+	static float valuePrevious_0		= value_0;
+	static float valuePrevious_1		= value_1;
+
+	static int value_2			= 0U;
+	static int valuePrevious_2		= value_2;
 
 	if (ImGui::CollapsingHeader("General") == true)
 	{
@@ -32,6 +35,7 @@ void UI::Body() noexcept
 		ImGui::Checkbox("TEXTURE 2", &flag_1);
 		ImGui::SliderFloat("POSITION X", &value_0, -0.5f, 0.5f, "%.1f");
 		ImGui::SliderFloat("POSITION Y", &value_1, -0.5f, 0.5f, "%.1f");
+		ImGui::SliderInt("ANGLE", &value_2, 0, 360);
 	}
 
 	flags.b_0 = flag_0;
@@ -67,11 +71,21 @@ void UI::Body() noexcept
 		d->payload.y = value_1;
 	}
 
-	ImGui::Text("FPS:      %d", d->payload.fps);
-	ImGui::Text("TEXTURE:  %s", d->PrintTextureName());
+	if (valuePrevious_2 != value_2)
+	{
+		valuePrevious_2 = value_2;
+
+		d->payload.a	= value_2;
+	}
+
+	ImGui::Text("FPS:        %d", d->payload.fps);
+	ImGui::Text("TEXTURE:    %s", d->PrintTextureName());
+	ImGui::Text("POSITION X: %.1f", d->payload.x);
+	ImGui::Text("POSITION Y: %.1f", d->payload.y);
+	ImGui::Text("ANGLE:      %d", d->payload.a);
 	ImGui::Text("WINDOW:");
-	ImGui::Text("WIDTH:    %d", d->payload.width);
-	ImGui::Text("HEIGHT:   %d", d->payload.height);
+	ImGui::Text("WIDTH:      %d", d->payload.width);
+	ImGui::Text("HEIGHT:     %d", d->payload.height);
 
 	//
 

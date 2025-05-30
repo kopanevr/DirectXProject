@@ -6,7 +6,9 @@
 #include "d3d.h"
 
 #include <iostream>
-#include <cmath> 
+
+#include <cmath>
+#include <corecrt_math_defines.h>
 
 #include <Windows.h>
 #include <D3DCompiler.h>
@@ -547,13 +549,28 @@ void D3D::Draw()
  */
 void D3D::SetCoordinate() const
 {
-    vertices[0].x = d->payload.x;
-    vertices[1].x = d->payload.x + 0.5f;
-    vertices[2].x = d->payload.x - 0.5f;
+    vertices[0].x = static_cast<FLOAT>(d->payload.x);
+    vertices[1].x = static_cast<FLOAT>(d->payload.x + 0.5f);
+    vertices[2].x = static_cast<FLOAT>(d->payload.x - 0.5f);
 
-    vertices[0].y = d->payload.y + 0.5f;
-    vertices[1].y = d->payload.y - 0.5f;
-    vertices[2].y = d->payload.y - 0.5f;
+    vertices[0].y = static_cast<FLOAT>(d->payload.y + 0.5f);
+    vertices[1].y = static_cast<FLOAT>(d->payload.y - 0.5f);
+    vertices[2].y = static_cast<FLOAT>(d->payload.y - 0.5f);
+
+    //
+
+    constexpr float radianPerGradus = static_cast<float>(M_PI / 180.0);
+
+    float cosA = std::cos(d->payload.a * radianPerGradus);
+    float sinA = std::sin(d->payload.a * radianPerGradus);
+
+    vertices[0].x = static_cast<FLOAT>(vertices[0].x * cosA - vertices[0].y * sinA);
+    vertices[1].x = static_cast<FLOAT>(vertices[1].x * cosA - vertices[1].y * sinA);
+    vertices[2].x = static_cast<FLOAT>(vertices[2].x * cosA - vertices[2].y * sinA);
+
+    vertices[0].y = static_cast<FLOAT>(vertices[0].x * sinA + vertices[0].y * cosA);
+    vertices[1].y = static_cast<FLOAT>(vertices[1].x * sinA + vertices[1].y * cosA);
+    vertices[2].y = static_cast<FLOAT>(vertices[2].x * sinA + vertices[2].y * cosA);
 }
 
 /**
@@ -695,6 +712,7 @@ void D3D::HandleData()
     static TEXTURES previousValueTexture    = d->payload.texture;
     static float previousX                  = d->payload.x;
     static float previousY                  = d->payload.y;
+    static uint16_t previousA               = d->payload.a;
 
     if (flag == true)
     {
@@ -714,10 +732,11 @@ void D3D::HandleData()
 
         //
 
-        if (previousX != d->payload.x || previousY != d->payload.y)
+        if (previousX != d->payload.x || previousY != d->payload.y || previousA != d->payload.a)
         {
             previousX = d->payload.x;
             previousY = d->payload.y;
+            previousA = d->payload.a;
 
             SetCoordinate();
 
@@ -726,8 +745,6 @@ void D3D::HandleData()
     }
     else
     {
-        previousValueTexture = d->payload.texture;
-
         if (d->payload.texture == TEXTURES::TEXTURE_0)
         {
             if (CreateShaderResourceView(L"src/1.PNG") != TRUE) { return; }
