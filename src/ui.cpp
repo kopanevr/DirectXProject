@@ -21,10 +21,17 @@ void UI::Body() noexcept
 	static bool flag_0 = true;
 	static bool flag_1 = false;
 
+	static float value_0			= 0.0f;
+	static float value_1			= 0.0f;
+	static float valuePrevious_0	= value_0;
+	static float valuePrevious_1	= value_1;
+
 	if (ImGui::CollapsingHeader("General") == true)
 	{
 		ImGui::Checkbox("TEXTURE 1", &flag_0);
 		ImGui::Checkbox("TEXTURE 2", &flag_1);
+		ImGui::SliderFloat("POSITION X", &value_0, -0.5f, 0.5f, "%.1f");
+		ImGui::SliderFloat("POSITION Y", &value_1, -0.5f, 0.5f, "%.1f");
 	}
 
 	flags.b_0 = flag_0;
@@ -44,6 +51,20 @@ void UI::Body() noexcept
 
 		flags.b_2 = flags.b_0;
 		flags.b_3 = flags.b_1;
+	}
+
+	if (valuePrevious_0 != value_0)
+	{
+		valuePrevious_0 = value_0;
+
+		d->payload.x = value_0;
+	}
+
+	if (valuePrevious_1 != value_1)
+	{
+		valuePrevious_1 = value_1;
+
+		d->payload.y = value_1;
 	}
 
 	ImGui::Text("FPS:      %d", d->payload.fps);

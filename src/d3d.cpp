@@ -6,6 +6,7 @@
 #include "d3d.h"
 
 #include <iostream>
+#include <cmath> 
 
 #include <Windows.h>
 #include <D3DCompiler.h>
@@ -238,6 +239,8 @@ BOOL D3D::CompileShaderFromFile(LPCWSTR pFileName, LPCSTR pEntryppoint, LPCSTR p
  */
 BOOL D3D::CreateVertexBuffer()
 {
+    DestroyVertexBuffer();
+
     D3D11_BUFFER_DESC bd = {};
 
     bd.ByteWidth                = (UINT)(3U * sizeof(Vertex));				// Размер.
@@ -465,6 +468,8 @@ void D3D::SetSamplerState()
  */
 BOOL D3D::CreateShaderResourceView(const wchar_t* szFile)
 {
+    DestroyShaderResourceView();
+
     DirectX::TexMetadata texMetadata        = {};
     DirectX::ScratchImage scratchImage      = {};
 
@@ -538,16 +543,18 @@ void D3D::Draw()
 }
 
 /**
- * @brief Переключить буферы.
+ * @brief
  */
-BOOL D3D::Present()
+void D3D::SetCoordinate() const
 {
-    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+    vertices[0].x = d->payload.x;
+    vertices[1].x = d->payload.x + 0.5f;
+    vertices[2].x = d->payload.x - 0.5f;
 
-    return SUCCEEDED(d3DContext.pSwapChain->Present((UINT)0U, (UINT)0U));
+    vertices[0].y = d->payload.y + 0.5f;
+    vertices[1].y = d->payload.y - 0.5f;
+    vertices[2].y = d->payload.y - 0.5f;
 }
-
-//
 
 /**
  * @brief
@@ -630,8 +637,6 @@ BOOL D3D::Init(HWND hWnd)
 
     SetInputLayout();
 
-    if (CreateVertexBuffer() != TRUE) { DeInit(); return FALSE; }
-
     if (CreateSamplerState() != TRUE) { DeInit(); return FALSE; }
 
     //
@@ -684,20 +689,18 @@ D3DContext* D3D::GetD3DContext()
 /**
  * @brief
  */
-void D3D::Render()
+void D3D::HandleData()
 {
-    ClearTargetView();
-
-    //
-
     static bool flag = false;
-    static TEXTURES previesValueTexture = d->payload.texture;
+    static TEXTURES previousValueTexture    = d->payload.texture;
+    static float previousX                  = d->payload.x;
+    static float previousY                  = d->payload.y;
 
     if (flag == true)
     {
-        if (previesValueTexture != d->payload.texture)
+        if (previousValueTexture != d->payload.texture)
         {
-            previesValueTexture = d->payload.texture;
+            previousValueTexture = d->payload.texture;
 
             if (d->payload.texture == TEXTURES::TEXTURE_0)
             {
@@ -708,10 +711,22 @@ void D3D::Render()
                 if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { return; }
             }
         }
+
+        //
+
+        if (previousX != d->payload.x || previousY != d->payload.y)
+        {
+            previousX = d->payload.x;
+            previousY = d->payload.y;
+
+            SetCoordinate();
+
+            if (CreateVertexBuffer() != TRUE) { return; }
+        }
     }
     else
     {
-        previesValueTexture = d->payload.texture;
+        previousValueTexture = d->payload.texture;
 
         if (d->payload.texture == TEXTURES::TEXTURE_0)
         {
@@ -722,8 +737,29 @@ void D3D::Render()
             if (CreateShaderResourceView(L"src/2.PNG") != TRUE) { return; }
         }
 
+        //
+
+        SetCoordinate();
+
+        if (CreateVertexBuffer() != TRUE) { return; }
+
+        //
+
         flag = true;
     }
+}
+
+/**
+ * @brief
+ */
+void D3D::Render()
+{
+    ClearTargetView();
+
+    //
+
+    HandleData();
+
 
     SetTargetView();
     SetVertexShader();
@@ -736,4 +772,14 @@ void D3D::Render()
     //
 
     Draw();                                 						// Отрендерить.
+}
+
+/**
+ * @brief Переключить буферы.
+ */
+BOOL D3D::Present()
+{
+    if (d3DContext.pSwapChain == nullptr) { return FALSE; }
+
+    return SUCCEEDED(d3DContext.pSwapChain->Present((UINT)0U, (UINT)0U));
 }

@@ -133,12 +133,14 @@ public:
 #endif
     BOOL ResizeSwapChaninBuffers(HWND hWnd);
 
+    void SetCoordinate()                                const;
+
 #if __cplusplus > 201703L
     [[nodiscard]]
 #endif
     BOOL CreateTargetView();
-
     void DestroyTargetView();
+
 
 #if __cplusplus > 201703L
     [[nodiscard]]
@@ -151,6 +153,8 @@ public:
     [[nodiscard]]
 #endif
     D3DContext* GetD3DContext();
+
+    void HandleData();
 
     void Render();
 

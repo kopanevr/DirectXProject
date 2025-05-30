@@ -29,6 +29,9 @@ struct Payload final
 	//
 
 	TEXTURES texture			= TEXTURES::TEXTURE_0;
+
+	float x						= 0.0f;
+	float y						= 0.0f;
 };
 
 class Data final
