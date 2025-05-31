@@ -557,6 +557,10 @@ void D3D::SetCoordinate() const
     vertices[1].y = static_cast<FLOAT>(d->payload.y - 0.5f);
     vertices[2].y = static_cast<FLOAT>(d->payload.y - 0.5f);
 
+    vertices[0].z = static_cast<FLOAT>(d->payload.z);
+    vertices[1].z = static_cast<FLOAT>(d->payload.z);
+    vertices[2].z = static_cast<FLOAT>(d->payload.z);
+
     //
 
     constexpr float radianPerGradus = static_cast<float>(M_PI / 180.0);
@@ -712,6 +716,7 @@ void D3D::HandleData()
     static TEXTURES previousValueTexture    = d->payload.texture;
     static float previousX                  = d->payload.x;
     static float previousY                  = d->payload.y;
+    static float previousZ                  = d->payload.y;
     static uint16_t previousA               = d->payload.a;
 
     if (flag == true)
@@ -732,10 +737,11 @@ void D3D::HandleData()
 
         //
 
-        if (previousX != d->payload.x || previousY != d->payload.y || previousA != d->payload.a)
+        if (previousX != d->payload.x || previousY != d->payload.y || previousZ != d->payload.z || previousA != d->payload.a)
         {
             previousX = d->payload.x;
             previousY = d->payload.y;
+            previousZ = d->payload.z;
             previousA = d->payload.a;
 
             SetCoordinate();

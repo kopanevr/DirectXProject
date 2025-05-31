@@ -1,13 +1,68 @@
 #include "ui.h"
 
+#include "timer.h"
+
 using namespace NUI;
 using namespace NDATA;
+
+#define DELAY_UPDATE					(long long)	( 30 )
+#define INCREMENT									( 10 )
 
 /**
  * @brief
  */
 void UI::Body() noexcept
 {
+	static bool flag_0 = true;
+	static bool flag_1 = false;
+	static bool flag_2 = false;
+	static bool flag_3 = false;
+
+	static float	value_0				= 0.0f;
+	static float	value_1				= 0.0f;
+	static float	value_2				= 0.0f;
+	static int		value_3				= 0U;
+	static float	valuePrevious_0		= value_0;
+	static float	valuePrevious_1		= value_1;
+	static float	valuePrevious_2		= value_2;
+	static int		valuePrevious_3		= value_3;
+
+	static Timer timer = {};
+
+	if (timer.isRunning() == false)
+	{
+		timer.Start(DELAY_UPDATE);
+	}
+
+	if (value_3 >= 360)
+	{
+		flag_2 = false;
+	}
+	else if (value_3 <= 0)
+	{
+		flag_2 = true;
+	}
+
+	if (timer.isFinished() == true)
+	{
+		if (flag_2 == true)
+		{
+			value_3 += INCREMENT;
+
+			flag_0 = true;
+			flag_1 = false;
+		}
+		else
+		{
+			value_3 -= INCREMENT;
+
+			flag_0 = false;
+			flag_1 = true;
+		}
+
+		timer.Reset();
+	}
+
 	ImGui::Begin(
 		"1",
 		nullptr,
@@ -16,26 +71,14 @@ void UI::Body() noexcept
 		ImGuiWindowFlags_NoMove
 	);
 
-	//
-
-	static bool flag_0 = true;
-	static bool flag_1 = false;
-
-	static float value_0			= 0.0f;
-	static float value_1			= 0.0f;
-	static float valuePrevious_0		= value_0;
-	static float valuePrevious_1		= value_1;
-
-	static int value_2			= 0U;
-	static int valuePrevious_2		= value_2;
-
 	if (ImGui::CollapsingHeader("General") == true)
 	{
 		ImGui::Checkbox("TEXTURE 1", &flag_0);
 		ImGui::Checkbox("TEXTURE 2", &flag_1);
 		ImGui::SliderFloat("POSITION X", &value_0, -0.5f, 0.5f, "%.1f");
 		ImGui::SliderFloat("POSITION Y", &value_1, -0.5f, 0.5f, "%.1f");
-		ImGui::SliderInt("ANGLE", &value_2, 0, 360);
+		ImGui::SliderFloat("POSITION Z", &value_2, 0.0f, 1.0f, "%.1f");
+		ImGui::SliderInt("ANGLE", &value_3, 0, 360);
 	}
 
 	flags.b_0 = flag_0;
@@ -75,13 +118,21 @@ void UI::Body() noexcept
 	{
 		valuePrevious_2 = value_2;
 
-		d->payload.a	= value_2;
+		d->payload.z = value_2;
 	}
 
-	ImGui::Text("FPS:        %d", d->payload.fps);
+	if (valuePrevious_3 != value_3)
+	{
+		valuePrevious_3 = value_3;
+
+		d->payload.a = value_3;
+	}
+
+	//ImGui::Text("FPS:        %d", d->payload.fps);
 	ImGui::Text("TEXTURE:    %s", d->PrintTextureName());
 	ImGui::Text("POSITION X: %.1f", d->payload.x);
 	ImGui::Text("POSITION Y: %.1f", d->payload.y);
+	ImGui::Text("POSITION Z: %.1f", d->payload.z);
 	ImGui::Text("ANGLE:      %d", d->payload.a);
 	ImGui::Text("WINDOW:");
 	ImGui::Text("WIDTH:      %d", d->payload.width);
