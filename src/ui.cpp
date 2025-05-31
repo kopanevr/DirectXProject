@@ -36,26 +36,22 @@ void UI::Body() noexcept
 
 	if (value_3 >= 360)
 	{
-		flag_2 = false;
-	}
-	else if (value_3 <= 0)
-	{
-		flag_2 = true;
+		value_3 = 0;
+
+		flag_2 = !flag_2;
 	}
 
 	if (timer.isFinished() == true)
 	{
+		value_3 += INCREMENT;
+
 		if (flag_2 == true)
 		{
-			value_3 += INCREMENT;
-
 			flag_0 = true;
 			flag_1 = false;
 		}
 		else
 		{
-			value_3 -= INCREMENT;
-
 			flag_0 = false;
 			flag_1 = true;
 		}

@@ -568,13 +568,24 @@ void D3D::SetCoordinate() const
     float cosA = std::cos(d->payload.a * radianPerGradus);
     float sinA = std::sin(d->payload.a * radianPerGradus);
 
-    vertices[0].x = static_cast<FLOAT>(vertices[0].x * cosA - vertices[0].y * sinA);
-    vertices[1].x = static_cast<FLOAT>(vertices[1].x * cosA - vertices[1].y * sinA);
-    vertices[2].x = static_cast<FLOAT>(vertices[2].x * cosA - vertices[2].y * sinA);
+    static float previousX[3] = {0.0f, 0.0f, 0.0f};
+    static float previousY[3] = { 0.0f, 0.0f, 0.0f };;
 
-    vertices[0].y = static_cast<FLOAT>(vertices[0].x * sinA + vertices[0].y * cosA);
-    vertices[1].y = static_cast<FLOAT>(vertices[1].x * sinA + vertices[1].y * cosA);
-    vertices[2].y = static_cast<FLOAT>(vertices[2].x * sinA + vertices[2].y * cosA);
+    previousX[0] = vertices[0].x;
+    previousX[1] = vertices[1].x;
+    previousX[2] = vertices[2].x;
+
+    previousY[0] = vertices[0].y;
+    previousY[1] = vertices[1].y;
+    previousY[2] = vertices[2].y;
+
+    vertices[0].x = static_cast<FLOAT>(previousX[0] * cosA - previousY[0] * sinA);
+    vertices[1].x = static_cast<FLOAT>(previousX[1] * cosA - previousY[1] * sinA);
+    vertices[2].x = static_cast<FLOAT>(previousX[2] * cosA - previousY[2] * sinA);
+
+    vertices[0].y = static_cast<FLOAT>(previousX[0] * sinA + previousY[0] * cosA);
+    vertices[1].y = static_cast<FLOAT>(previousX[1] * sinA + previousY[1] * cosA);
+    vertices[2].y = static_cast<FLOAT>(previousX[2] * sinA + previousY[2] * cosA);
 }
 
 /**
